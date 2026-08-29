@@ -1,0 +1,11 @@
+V5.6.6 GitHub 上傳前檢查清單
+
+[ ] 已確認 LEXUS 車牌顯示為 72**-GE
+[ ] 已確認是否要公開 VOLVO 車牌 BHO-2086
+[ ] 已確認 Repository 要設為 Public 或 Private
+[ ] 已解壓縮 ZIP，不直接把 ZIP 當網站上傳
+[ ] 已將 .github/workflows/deploy-pages.yml 一起上傳
+[ ] Settings → Pages → Source 已選 GitHub Actions
+[ ] Actions 的品質檢查與部署均顯示綠色勾勾
+[ ] 開啟網站後測試新增、匯出 JSON、ICS 與 PWA 安裝
+[ ] 第一次正式使用前先下載一份 JSON 完整備份

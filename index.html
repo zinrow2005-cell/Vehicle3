@@ -1,0 +1,815 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="theme-color" content="#07172d" />
+  <title>車輛維修保養與油耗管理中心 V5.6.6</title>
+  <link rel="manifest" href="./manifest.webmanifest?v=5.6.6" />
+  <link rel="icon" href="./icon.svg" type="image/svg+xml" />
+  <link rel="apple-touch-icon" href="./icon-192.png" />
+  <link rel="stylesheet" href="./styles.css?v=5.6.6" />
+</head>
+<body>
+  <div class="login-gate" id="loginGate">
+    <div class="login-card">
+      <div class="login-brand"><div class="brand-mark">V</div><div><strong>Vehicle Hub</strong><small>車輛維修保養與油耗管理中心</small></div></div>
+      <div class="login-copy"><span class="login-kicker">V5.6.6 家庭帳號登入</span><h1>登入車輛管理系統</h1><p>請輸入帳號與密碼登入系統。</p></div>
+      <form id="loginForm" class="login-form" autocomplete="on">
+        <label for="loginUsername">帳號<input id="loginUsername" name="username" type="text" inputmode="text" autocomplete="username" autocapitalize="none" autocorrect="off" spellcheck="false" enterkeyhint="next" placeholder="請輸入帳號" required /></label>
+        <label for="loginPassword">密碼<div class="login-password-row"><input id="loginPassword" name="password" type="password" inputmode="numeric" autocomplete="current-password" autocapitalize="none" autocorrect="off" spellcheck="false" enterkeyhint="done" placeholder="請輸入密碼" required /><button id="toggleLoginPassword" type="button" class="login-eye" aria-label="顯示或隱藏密碼">顯示</button></div></label>
+        <div class="login-input-backup-row" aria-label="iPad 鍵盤輸入備援">
+          <button id="enableLoginUsername" type="button" class="login-input-backup">iPad 鍵盤沒出現？啟用帳號輸入</button>
+          <button id="enableLoginPassword" type="button" class="login-input-backup">啟用密碼輸入</button>
+        </div>
+        <label class="login-remember"><input id="rememberLogin" type="checkbox" /><span>在這台裝置保持登入 7 天</span></label>
+        <button class="btn btn-teal login-submit" type="submit">登入系統</button>
+        <p class="login-error" id="loginError" role="alert" aria-live="polite"></p>
+      </form>
+      <div class="login-security-note"><strong>安全說明</strong><span>本機登入主要用於操作分流。真正的跨裝置資料保護與同步，需連接本版附帶的 Google Sheets＋Apps Script 後端。</span></div>
+    </div>
+  </div>
+  <div class="app-update-banner" id="appUpdateBanner" hidden>
+    <div><strong>系統有新版本可用</strong><span id="appUpdateText">重新載入即可套用最新功能。</span></div>
+    <div class="update-banner-actions"><button class="btn btn-teal" id="applyAppUpdate" type="button">立即更新</button><button class="btn btn-secondary" id="dismissAppUpdate" type="button">稍後</button></div>
+  </div>
+  <div class="app-shell" id="appShell" hidden>
+    <aside class="sidebar" id="sidebar">
+      <div class="brand-row">
+        <button class="icon-btn hamburger" id="sidebarToggle" aria-label="收合選單">
+          <span></span><span></span><span></span>
+        </button>
+        <div class="brand-mini">
+          <div class="brand-mark">V</div>
+          <div>
+            <strong>Vehicle Hub</strong>
+            <small>車輛管理 V5.6.6</small>
+          </div>
+        </div>
+      </div>
+
+      <nav class="side-nav" aria-label="主要選單">
+        <button class="nav-item active" data-view="dashboard">
+          <span class="nav-icon">◉</span><span>總覽儀表板</span>
+        </button>
+        <button class="nav-item" data-view="maintenance">
+          <span class="nav-icon">🛠</span><span>維修保養工單</span>
+        </button>
+        <button class="nav-item" data-view="maintenance-evaluation">
+          <span class="nav-icon">◎</span><span>車齡・零件・效益</span>
+        </button>
+        <button class="nav-item" data-view="fuel">
+          <span class="nav-icon">⛽</span><span>加油與油耗紀錄</span>
+        </button>
+        <button class="nav-item" data-view="fuel-quality">
+          <span class="nav-icon">✓</span><span>加油資料品質</span>
+        </button>
+        <button class="nav-item" data-view="efficiency">
+          <span class="nav-icon">◌</span><span>油耗・續航評估</span>
+        </button>
+        <button class="nav-item" data-view="analysis">
+          <span class="nav-icon">◇</span><span>成本分析</span>
+        </button>
+        <button class="nav-item" data-view="reminders">
+          <span class="nav-icon">♢</span><span>保養提醒</span>
+        </button>
+        <button class="nav-item" data-view="automation">
+          <span class="nav-icon">⟳</span><span>自動運行中心</span>
+        </button>
+        <button class="nav-item" data-view="sync">
+          <span class="nav-icon">☁</span><span>Google雲端同步</span>
+        </button>
+        <button class="nav-item" data-view="obligations">
+          <span class="nav-icon">▣</span><span>稅金・保險・驗車</span>
+        </button>
+        <button class="nav-item" data-view="vehicle">
+          <span class="nav-icon">🚙</span><span>車輛主檔</span>
+        </button>
+        <button class="nav-item" data-view="export">
+          <span class="nav-icon">⇩</span><span>報表匯出</span>
+        </button>
+      </nav>
+
+      <div class="vehicle-hero">
+        <div class="mountains"></div>
+        <svg class="car-svg" viewBox="0 0 520 220" role="img" aria-label="休旅車示意圖">
+          <defs>
+            <linearGradient id="carBody" x1="0" x2="1">
+              <stop offset="0" stop-color="#dfe8ef"/>
+              <stop offset="0.5" stop-color="#8597a8"/>
+              <stop offset="1" stop-color="#c8d4de"/>
+            </linearGradient>
+            <linearGradient id="glass" x1="0" x2="1">
+              <stop offset="0" stop-color="#1b344c"/>
+              <stop offset="1" stop-color="#081522"/>
+            </linearGradient>
+          </defs>
+          <ellipse cx="266" cy="187" rx="203" ry="16" fill="rgba(0,0,0,.28)"/>
+          <path d="M83 147 C112 95 150 70 227 63 L336 62 C375 65 412 90 431 119 L470 131 C487 136 499 150 499 164 L493 178 L54 178 L49 163 C49 153 59 148 83 147Z" fill="url(#carBody)" stroke="#e8f4ff" stroke-opacity=".45" stroke-width="3"/>
+          <path d="M139 102 C166 76 190 72 234 70 L335 70 C363 72 387 87 405 111 L141 111Z" fill="url(#glass)" stroke="#8eb8d7" stroke-opacity=".5"/>
+          <path d="M250 70 L247 111" stroke="#8eb8d7" stroke-width="3"/>
+          <path d="M414 119 L437 142" stroke="#556a7c" stroke-width="4"/>
+          <path d="M72 149 L122 149" stroke="#dae9f5" stroke-width="6" stroke-linecap="round"/>
+          <path d="M451 140 L486 149" stroke="#8de7ff" stroke-width="6" stroke-linecap="round"/>
+          <rect x="231" y="122" width="55" height="5" rx="2.5" fill="#53697d"/>
+          <rect x="342" y="122" width="52" height="5" rx="2.5" fill="#53697d"/>
+          <circle cx="140" cy="177" r="35" fill="#0b121b" stroke="#5f7181" stroke-width="7"/>
+          <circle cx="140" cy="177" r="17" fill="#b7c5d0"/>
+          <circle cx="409" cy="177" r="35" fill="#0b121b" stroke="#5f7181" stroke-width="7"/>
+          <circle cx="409" cy="177" r="17" fill="#b7c5d0"/>
+        </svg>
+      </div>
+
+      <div class="vehicle-status-card">
+        <div><span>車輛狀態</span><strong><i></i> 良好</strong></div>
+        <small id="lastUpdated">資料更新：—</small>
+      </div>
+
+      <button class="collapse-btn" id="collapseBtn">← <span>收合選單</span></button>
+    </aside>
+
+    <main class="main-content">
+      <header class="topbar">
+        <div class="topbar-title-block">
+          <button class="icon-btn mobile-menu-btn" id="mobileMenuButton" type="button" aria-label="開啟選單">☰</button>
+          <div>
+            <h1>車輛維修保養與油耗管理中心</h1>
+            <p class="page-subtitle" id="pageSubtitle">掌握里程、油耗、費用與保養週期</p>
+          </div>
+        </div>
+        <div class="top-actions">
+          <label class="vehicle-select-wrap">
+            <span>目前車輛：</span>
+            <select id="vehicleSelect" aria-label="目前車輛"></select>
+          </label>
+          <div class="search-wrap">
+            <label class="search-box">
+              <input id="globalSearch" type="search" placeholder="搜尋車輛、保養、加油、保險..." autocomplete="off" />
+              <span>⌕</span>
+            </label>
+            <div class="search-results" id="searchResults" hidden></div>
+          </div>
+          <div class="appearance-wrap">
+            <button class="btn btn-appearance" id="appearanceButton" type="button" aria-expanded="false">◐ 外觀</button>
+            <div class="appearance-panel" id="appearancePanel" hidden>
+              <div class="appearance-head">
+                <div><strong>顯示與可讀性</strong><small>設定會保存在這台電腦</small></div>
+                <button class="icon-btn" id="closeAppearance" type="button" aria-label="關閉外觀設定">×</button>
+              </div>
+              <div class="appearance-group">
+                <span>主題模式</span>
+                <div class="appearance-options" id="themeOptions">
+                  <button type="button" data-theme-value="dark">🌙 深色</button>
+                  <button type="button" data-theme-value="light">☀️ 亮色</button>
+                  <button type="button" data-theme-value="system">◐ 跟隨系統</button>
+                </div>
+              </div>
+              <div class="appearance-group">
+                <span>字體大小</span>
+                <div class="appearance-options" id="fontSizeOptions">
+                  <button type="button" data-font-size-value="normal">標準</button>
+                  <button type="button" data-font-size-value="large">較大</button>
+                  <button type="button" data-font-size-value="xlarge">特大</button>
+                </div>
+              </div>
+              <label class="contrast-toggle">
+                <span><strong>高對比模式</strong><small>提高次要文字、表格與邊框清晰度</small></span>
+                <input id="highContrastToggle" type="checkbox" />
+              </label>
+              <button class="btn btn-secondary appearance-reset" id="resetAppearance" type="button">恢復預設顯示</button>
+            </div>
+          </div>
+          <div class="user-session-chip" id="userSessionChip">
+            <span class="user-avatar" id="currentUserAvatar">D</span>
+            <span><small>目前登入</small><strong id="currentUserName">—</strong></span>
+            <button id="logoutButton" type="button">登出</button>
+          </div>
+          <button class="btn btn-primary" id="addMaintenanceTop">🛠 新增保養紀錄</button>
+          <button class="btn btn-teal" id="addFuelTop">⛽ 新增加油紀錄</button>
+        </div>
+      </header>
+
+      <section class="view active" id="view-dashboard">
+        <div class="kpi-grid" id="kpiGrid"></div>
+
+        <section class="panel fleet-panel" id="fleetOverviewPanel">
+          <div class="panel-head">
+            <div>
+              <h2>🚙 多車輛總覽比較</h2>
+              <p class="muted">可一次比較全部車輛的里程、油耗、年度花費與提醒狀態，點擊卡片可直接切換目前查看車輛。</p>
+            </div>
+          </div>
+          <div class="fleet-kpis" id="fleetKpis"></div>
+          <div class="vehicle-compare-cards" id="fleetVehicleCards"></div>
+          <div class="table-scroll fleet-table-wrap">
+            <table class="data-table">
+              <thead>
+                <tr><th>車輛</th><th>目前里程</th><th>最近實際油耗</th><th>本月油費</th><th>年度維修費</th><th>每公里燃油成本</th><th>下次提醒</th><th>切換</th></tr>
+              </thead>
+              <tbody id="fleetTableBody"></tbody>
+            </table>
+          </div>
+          <div class="fleet-due-section">
+            <div class="panel-head compact"><h2>📅 全車近期到期事項</h2><button class="link-btn" data-jump="obligations">查看全部</button></div>
+            <div class="fleet-due-list" id="fleetDueList"></div>
+          </div>
+        </section>
+
+        <div class="dashboard-grid">
+          <section class="panel trend-panel">
+            <div class="panel-head">
+              <div>
+                <h2>油耗與費用趨勢 <small class="chart-hover-hint">滑鼠移動查看詳細資料</small></h2>
+                <div class="legend">
+                  <span><i class="dot cyan"></i>油耗（km/L）</span>
+                  <span><i class="dot blue"></i>加油費用（元）</span>
+                  <span><i class="dot amber"></i>行駛里程（km）</span>
+                </div>
+              </div>
+              <div class="segmented" id="trendRange">
+                <button data-months="6">6個月</button>
+                <button class="active" data-months="12">12個月</button>
+                <button data-months="24">24個月</button>
+              </div>
+            </div>
+            <div class="chart-wrap">
+              <svg id="trendChart" viewBox="0 0 1000 360" role="img" aria-label="油耗與費用趨勢圖"></svg>
+            </div>
+          </section>
+
+          <section class="panel quick-panel">
+            <div class="panel-head compact">
+              <h2>⛽ 快速新增加油紀錄</h2>
+              <button class="icon-btn" id="clearQuickFuel" title="清除">↻</button>
+            </div>
+            <div class="quick-vehicle-banner" id="quickVehicleBanner">本次紀錄車輛：—</div>
+            <form id="quickFuelForm" class="quick-form">
+              <label>日期<input type="date" name="date" required /></label>
+              <label>目前里程<div class="input-unit"><input type="number" name="odometer" min="0" step="1" required  inputmode="decimal" /><span>km</span></div></label>
+              <label>油品<select name="fuelType"><option>95無鉛</option><option>汽油（油品未註明）</option><option>92無鉛</option><option>98無鉛</option><option>柴油</option><option>其他</option></select></label>
+              <label>加油公升數<div class="input-unit"><input type="number" name="liters" min="0.01" step="0.01" placeholder="例如：42.6" required  inputmode="decimal" /><span>L</span></div></label>
+              <label>每公升單價<div class="input-unit"><input type="number" name="unitPrice" min="0" step="0.01" placeholder="例如：31.2" required  inputmode="decimal" /><span>元</span></div></label>
+              <label>實付金額<div class="input-unit"><input type="number" name="amount" min="0" step="1" placeholder="自動計算"  inputmode="decimal" /><span>元</span></div></label>
+              <label>是否加滿<select name="fullTank"><option value="true">是</option><option value="false">否</option><option value="null">未確認</option></select></label>
+              <button class="btn btn-teal full" type="submit">▣ 儲存紀錄</button>
+            </form>
+          </section>
+
+          <section class="panel table-panel">
+            <div class="panel-head compact"><h2>🛠 近期維修保養紀錄</h2><button class="link-btn" data-jump="maintenance">查看全部</button></div>
+            <div class="table-scroll"><table><thead><tr><th>日期</th><th>里程</th><th>項目</th><th>金額</th><th>下次提醒</th></tr></thead><tbody id="recentMaintenanceBody"></tbody></table></div>
+          </section>
+
+          <section class="panel table-panel">
+            <div class="panel-head compact"><h2>⛽ 加油紀錄與燃油效率</h2><button class="link-btn" data-jump="fuel">查看全部</button></div>
+            <div class="table-scroll"><table><thead><tr><th>日期</th><th>油品</th><th>公升數</th><th>單價</th><th>實付金額</th><th>加滿</th><th>油耗</th></tr></thead><tbody id="recentFuelBody"></tbody></table></div>
+          </section>
+
+          <section class="panel mini-panel">
+            <div class="panel-head compact"><h2>◉ 費用分類占比</h2><span class="muted">年度</span></div>
+            <div class="donut-layout">
+              <div class="donut" id="costDonut"><div><small>總支出</small><strong id="donutTotal">$0</strong></div></div>
+              <div class="donut-legend" id="donutLegend"></div>
+            </div>
+          </section>
+
+          <section class="panel mini-panel">
+            <div class="panel-head compact"><h2>🔔 保養提醒</h2><button class="link-btn" data-jump="reminders">›</button></div>
+            <div class="reminder-list" id="dashboardReminders"></div>
+          </section>
+
+          <section class="panel mini-panel">
+            <div class="panel-head compact"><h2>⌁ 本月摘要</h2><span>›</span></div>
+            <div class="summary-list" id="monthlySummary"></div>
+          </section>
+        </div>
+      </section>
+
+      <section class="view" id="view-maintenance">
+        <div class="section-toolbar">
+          <div><h2>維修保養工單</h2><p>以單次進廠為一張工單，集中管理項目、金額與下次提醒。</p></div>
+          <button class="btn btn-primary" id="addMaintenancePage">＋ 新增維修保養工單</button>
+        </div>
+        <div class="panel filter-panel">
+          <div class="filter-grid">
+            <label>關鍵字<input id="maintenanceKeyword" type="search" placeholder="工單號、項目、廠商、備註" /></label>
+            <label>類型<select id="maintenanceTypeFilter"><option value="">全部</option><option>定期保養</option><option>故障維修</option><option>輪胎</option><option>鈑金烤漆</option><option>事故維修</option><option>其他</option></select></label>
+            <label>起始日期<input id="maintenanceStart" type="date" /></label>
+            <label>結束日期<input id="maintenanceEnd" type="date" /></label>
+          </div>
+        </div>
+        <div class="panel table-panel full-panel">
+          <div class="table-scroll"><table class="data-table"><thead><tr><th>日期</th><th>里程</th><th>類型</th><th>維修廠</th><th>項目</th><th>總金額</th><th>下次提醒</th><th>操作</th></tr></thead><tbody id="maintenanceTableBody"></tbody></table></div>
+        </div>
+      </section>
+
+      <section class="view" id="view-maintenance-evaluation">
+        <div class="section-toolbar maintenance-evaluation-toolbar">
+          <div>
+            <h2>車齡、零件汰換與維修支出效益評估</h2>
+            <p>以可編輯的車齡階段與零件汰換標準資料庫，分析不同車齡、年里程、零件週期、實際檢查結果與維修支出效益。</p>
+          </div>
+          <span class="data-quality-chip" id="maintenanceEvaluationQualityChip">資料檢查中</span>
+        </div>
+
+        <section class="panel maintenance-budget-panel">
+          <div class="panel-head">
+            <div>
+              <h2>年度維修預算基準</h2>
+              <p class="muted">系統會依車齡自動帶入規劃範圍；這不是官方定價，可依實際保修廠、零件品牌與車況自行調整。</p>
+            </div>
+            <button class="btn btn-primary" id="saveMaintenanceBudgetSettings" type="button">儲存評估設定</button>
+          </div>
+          <div class="maintenance-budget-grid">
+            <label>評估期間<select id="maintenanceEvaluationWindow"><option value="3">最近3個完整年度</option><option value="5" selected>最近5個完整年度</option><option value="8">最近8個完整年度</option><option value="all">全部已輸入紀錄</option></select></label>
+            <label>年度合理下限<div class="input-unit"><input id="maintenanceBudgetLowInput" type="number" min="0" step="1000"  inputmode="decimal" /><span>元</span></div></label>
+            <label>年度合理上限<div class="input-unit"><input id="maintenanceBudgetHighInput" type="number" min="0" step="1000"  inputmode="decimal" /><span>元</span></div></label>
+            <label>一次性大修門檻<div class="input-unit"><input id="majorRepairThresholdInput" type="number" min="0" step="1000"  inputmode="decimal" /><span>元</span></div></label>
+          </div>
+          <div class="maintenance-budget-reference" id="maintenanceBudgetReference"></div>
+        </section>
+
+        <section class="panel age-database-panel">
+          <div class="panel-head">
+            <div>
+              <h2>車齡階段資料庫與情境試算</h2>
+              <p class="muted">可模擬同一車款在不同車齡與年行駛里程下的合理預算、突發維修準備金、檢查頻率及主要風險；資料庫內容可自行編輯。</p>
+            </div>
+            <div class="toolbar-actions">
+              <button class="btn btn-secondary" id="exportAgeDatabaseCsv" type="button">匯出資料庫CSV</button>
+              <button class="btn btn-secondary" id="resetAgeDatabase" type="button">恢復預設資料庫</button>
+            </div>
+          </div>
+          <div class="age-scenario-controls">
+            <label>模擬車齡<div class="input-unit"><input id="ageSimulationAge" type="number" min="0" max="60" step="1"  inputmode="decimal" /><span>年</span></div></label>
+            <label>年行駛里程<div class="input-unit"><input id="ageSimulationMileage" type="number" min="0" step="500"  inputmode="decimal" /><span>km</span></div></label>
+            <label>車款成本係數<div class="input-unit"><input id="ageSimulationCostFactor" type="number" min="0.5" max="3" step="0.05"  inputmode="decimal" /><span>倍</span></div></label>
+            <button class="btn btn-primary" id="useActualAgeScenario" type="button">套用目前車輛</button>
+          </div>
+          <div class="kpi-grid compact-kpis age-database-kpis" id="ageDatabaseKpis"></div>
+          <div class="age-profile-timeline" id="ageProfileTimeline"></div>
+          <div class="age-database-insight-grid">
+            <section class="age-risk-box"><h3>主要系統風險等級</h3><div id="ageRiskMatrix"></div></section>
+            <section class="age-focus-box"><h3>該車齡階段重點</h3><div class="evaluation-list good" id="ageFocusList"></div></section>
+          </div>
+          <div class="table-scroll age-database-table-wrap"><table class="data-table age-database-table"><thead><tr><th>車齡範圍</th><th>階段</th><th>年度基礎預算</th><th>準備金</th><th>檢查頻率</th><th>年度事件</th><th>重點項目</th><th>操作</th></tr></thead><tbody id="ageDatabaseBody"></tbody></table></div>
+        </section>
+
+        <section class="panel part-assessment-panel">
+          <div class="panel-head">
+            <div>
+              <h2>零件與耗材汰換標準評估</h2>
+              <p class="muted">依車齡、目前里程、上次更換時間、歷史工單與人工檢查結果，判斷正常、建議檢查、接近汰換或應優先處理。煞車、輪胎、底盤與正時系統仍須由技師現場確認。</p>
+            </div>
+            <div class="toolbar-actions">
+              <button class="btn btn-secondary" id="exportPartAssessmentCsv" type="button">匯出評估CSV</button>
+              <button class="btn btn-secondary" id="resetPartStandards" type="button">恢復零件標準</button>
+            </div>
+          </div>
+          <div class="part-assessment-filters">
+            <label>分類<select id="partCategoryFilter"><option value="">全部分類</option></select></label>
+            <label>判斷<select id="partStatusFilter"><option value="">全部狀態</option><option value="due">應優先處理</option><option value="soon">接近汰換</option><option value="inspect">建議檢查</option><option value="unknown">缺少紀錄</option><option value="normal">正常</option></select></label>
+            <label>關鍵字<input id="partKeywordFilter" type="search" placeholder="零件、系統、適用範圍" /></label>
+          </div>
+          <div class="kpi-grid compact-kpis part-assessment-kpis" id="partAssessmentKpis"></div>
+          <div class="part-assessment-notice" id="partAssessmentNotice"></div>
+          <div class="table-scroll"><table class="data-table part-assessment-table"><thead><tr><th>零件／耗材</th><th>標準週期</th><th>最近紀錄</th><th>已使用</th><th>檢查狀況</th><th>系統判斷</th><th>判斷依據與建議</th><th>操作</th></tr></thead><tbody id="partAssessmentBody"></tbody></table></div>
+        </section>
+
+        <div class="kpi-grid compact-kpis maintenance-evaluation-kpis" id="maintenanceEvaluationKpis"></div>
+
+        <div class="maintenance-evaluation-layout">
+          <section class="panel maintenance-age-panel">
+            <div class="panel-head"><div><h2>車齡階段與合理風險</h2><p class="muted">車齡越高，橡膠、油封、電系、冷卻、底盤及空調零件的老化風險通常會高於單純里程耗損。</p></div></div>
+            <div id="maintenanceAgeStage"></div>
+          </section>
+
+          <section class="panel maintenance-budget-compare-panel">
+            <div class="panel-head"><div><h2>正常預算與實際支出比較</h2><p class="muted">同時顯示按日曆年度平均與「有發生支出的年度平均」，避免漏年或一次性大修造成誤判。</p></div></div>
+            <div id="maintenanceBudgetComparison"></div>
+          </section>
+
+          <section class="panel maintenance-benefit-panel">
+            <div class="panel-head"><div><h2>支出效益結構</h2><p class="muted">依工單項目將支出分成安全、預防保養、可靠度修復、舒適便利及其他。</p></div></div>
+            <div class="maintenance-benefit-bars" id="maintenanceBenefitBars"></div>
+          </section>
+
+          <section class="panel maintenance-conclusion-panel">
+            <div class="panel-head"><h2>綜合判斷與建議</h2></div>
+            <div class="evaluation-list good" id="maintenanceEvaluationStrengths"></div>
+            <div class="evaluation-list warn maintenance-evaluation-warnings" id="maintenanceEvaluationWarnings"></div>
+          </section>
+
+          <section class="panel maintenance-evaluation-wide">
+            <div class="panel-head"><div><h2>年度維修支出</h2><p class="muted">未輸入工單的年度會顯示0元；0元可能代表沒有維修，也可能代表資料尚未完整。</p></div></div>
+            <div class="table-scroll"><table class="data-table maintenance-year-table"><thead><tr><th>年度</th><th>車齡</th><th>工單數</th><th>定期保養</th><th>故障／修復</th><th>一次性大修</th><th>年度總額</th><th>相對預算</th></tr></thead><tbody id="maintenanceYearBody"></tbody></table></div>
+          </section>
+
+          <section class="panel maintenance-evaluation-wide">
+            <div class="panel-head"><div><h2>工單效益評估</h2><p class="muted">評分是管理上的分類工具，不代表零件一定需要更換；實際必要性仍應依檢查結果、故障症狀與技師判定。</p></div></div>
+            <div class="table-scroll"><table class="data-table maintenance-benefit-table"><thead><tr><th>日期</th><th>車齡</th><th>工單內容</th><th>金額</th><th>主要效益</th><th>必要性</th><th>一次性支出</th><th>效益說明</th></tr></thead><tbody id="maintenanceBenefitBody"></tbody></table></div>
+          </section>
+
+          <section class="panel maintenance-evaluation-wide fleet-maintenance-evaluation-panel">
+            <div class="panel-head"><div><h2>全部車輛車齡與維修支出比較</h2><p class="muted">尚未輸入製造年月或維修紀錄的車輛會清楚標示待補資料。</p></div></div>
+            <div class="table-scroll"><table class="data-table"><thead><tr><th>車輛</th><th>車齡</th><th>年均里程</th><th>合理年度預算</th><th>實際年均支出</th><th>必要支出占比</th><th>效益評分</th><th>判斷</th></tr></thead><tbody id="fleetMaintenanceEvaluationBody"></tbody></table></div>
+          </section>
+        </div>
+      </section>
+
+      <section class="view" id="view-fuel">
+        <div class="section-toolbar">
+          <div><h2>加油與油耗紀錄</h2><p>優先依加滿到加滿法計算；若歷史資料提供前後里程差，會以區間公里與油量換算。未拍里程的中間加油會併入下一個有效週期。</p></div>
+          <button class="btn btn-teal" id="addFuelPage">＋ 新增加油紀錄</button>
+        </div>
+        <div class="kpi-grid compact-kpis" id="fuelKpis"></div>
+        <div class="panel filter-panel">
+          <div class="filter-grid">
+            <label>油品<select id="fuelTypeFilter"><option value="">全部油品</option><option>汽油（油品未註明）</option><option>92無鉛</option><option>95無鉛</option><option>98無鉛</option><option>柴油</option><option>其他</option></select></label>
+            <label>起始日期<input id="fuelStart" type="date" /></label>
+            <label>結束日期<input id="fuelEnd" type="date" /></label>
+            <label>只看加滿<select id="fuelFullFilter"><option value="">全部</option><option value="true">是</option><option value="false">否</option><option value="null">未確認</option></select></label>
+          </div>
+        </div>
+        <div class="panel table-panel full-panel">
+          <div class="table-scroll"><table class="data-table"><thead><tr><th>日期</th><th>里程</th><th>區間公里</th><th>油品</th><th>公升</th><th>有效單價</th><th>實付</th><th>加滿</th><th>油耗</th><th>每公里油費</th><th>資料品質</th><th>操作</th></tr></thead><tbody id="fuelTableBody"></tbody></table></div>
+        </div>
+      </section>
+
+
+
+      <section class="view" id="view-fuel-quality">
+        <div class="section-toolbar">
+          <div><h2>加油資料品質與異常檢查中心</h2><p>集中處理估算里程、年份回推、是否加滿待確認、異常油耗與未歸類原始資料。完成確認後，油耗與續航評估會同步更新。</p></div>
+          <div class="toolbar-actions"><button class="btn btn-secondary" id="exportFuelQualityCsvTop" type="button">匯出資料品質CSV</button><button class="btn btn-primary" id="createManualSnapshot" type="button">建立資料快照</button></div>
+        </div>
+        <div class="kpi-grid compact-kpis" id="fuelQualityKpis"></div>
+        <section class="panel fuel-quality-summary-panel">
+          <div class="panel-head"><div><h2>目前資料品質摘要</h2><p class="muted" id="fuelQualitySummary">—</p></div><span class="data-quality-chip" id="fuelQualityOverallChip">檢查中</span></div>
+          <div class="fuel-quality-mode-grid">
+            <label>資料狀態<select id="fuelQualityStatusFilter"><option value="">全部狀態</option><option value="review">待人工確認</option><option value="estimated">估算資料</option><option value="inferred">年份／加滿回推</option><option value="confirmed">已確認</option></select></label>
+            <label>問題類型<select id="fuelQualityIssueFilter"><option value="">全部問題</option><option value="fullTank">是否加滿</option><option value="odometer">里程</option><option value="year">年份回推</option><option value="outlier">異常油耗</option></select></label>
+            <label>顯示模式<select id="fuelAnalysisDataMode"><option value="all">分析含估算資料</option><option value="confirmed">分析僅用已確認資料</option></select></label>
+            <label>關鍵字<input id="fuelQualityKeyword" type="search" placeholder="日期、備註、估算方法" /></label>
+          </div>
+        </section>
+        <section class="panel">
+          <div class="panel-head"><div><h2>加油紀錄檢查清單</h2><p class="muted">「待人工確認」不會納入有效油耗平均；估算及回推資料會保留標示。</p></div><span class="muted" id="fuelQualityCount">—</span></div>
+          <div class="table-scroll"><table class="data-table fuel-quality-table"><thead><tr><th>日期</th><th>里程</th><th>公升／金額</th><th>資料狀態</th><th>檢查結果</th><th>估算／判斷依據</th><th>操作</th></tr></thead><tbody id="fuelQualityBody"></tbody></table></div>
+        </section>
+        <section class="panel">
+          <div class="panel-head"><div><h2>未歸類原始資料</h2><p class="muted">缺少日期、油量或金額的零散資料不會納入計算，待日後補充後再轉成正式紀錄。</p></div></div>
+          <div class="table-scroll"><table class="data-table"><thead><tr><th>車輛</th><th>資料類型</th><th>原始值</th><th>日期</th><th>狀態</th><th>說明</th><th>操作</th></tr></thead><tbody id="unclassifiedRecordBody"></tbody></table></div>
+        </section>
+      </section>
+
+      <section class="view" id="view-efficiency">
+        <div class="section-toolbar efficiency-toolbar">
+          <div>
+            <h2>油耗與續航力評估中心</h2>
+            <p>依加滿週期、油箱容量、安全預留油量與參考油耗，判斷目前車輛的油耗表現、可用續航與優缺點。</p>
+          </div>
+          <span class="data-quality-chip" id="efficiencyQualityChip">資料檢查中</span>
+        </div>
+
+        <section class="panel efficiency-setting-panel">
+          <div class="panel-head"><div><h2>評估基準設定</h2><p class="muted">油箱容量與參考油耗可依車型資料調整；安全預留油量用來估算較保守的可用續航。</p></div><button class="btn btn-primary" id="saveEfficiencySettings" type="button">儲存評估設定</button></div>
+          <div class="efficiency-setting-grid">
+            <label>油箱容量<div class="input-unit"><input id="fuelTankCapacityInput" type="number" min="1" step="0.1"  inputmode="decimal" /><span>L</span></div></label>
+            <label>安全預留油量<div class="input-unit"><input id="reserveLitersInput" type="number" min="0" step="0.1"  inputmode="decimal" /><span>L</span></div></label>
+            <label>車型參考油耗<div class="input-unit"><input id="benchmarkEfficiencyInput" type="number" min="1" step="0.1"  inputmode="decimal" /><span>km/L</span></div></label>
+            <label>評估週期<select id="efficiencyWindowSelect"><option value="3">最近3次</option><option value="5" selected>最近5次</option><option value="10">最近10次</option><option value="all">全部有效週期</option></select></label>
+          </div>
+          <div class="efficiency-reference-note" id="efficiencyReferenceNote"></div>
+        </section>
+
+        <div class="kpi-grid compact-kpis efficiency-kpis" id="efficiencyKpis"></div>
+
+        <div class="efficiency-layout">
+          <section class="panel efficiency-score-panel">
+            <div class="panel-head"><div><h2>整體評價</h2><p class="muted">以近期加權油耗相對於車型參考值判斷，不同路況、載重及冷氣使用都會影響結果。</p></div></div>
+            <div class="efficiency-score-wrap">
+              <div class="efficiency-score-ring" id="efficiencyScoreRing"><div><strong id="efficiencyScoreValue">—</strong><span id="efficiencyScoreGrade">資料不足</span></div></div>
+              <div class="efficiency-score-detail">
+                <div class="score-meter"><div class="score-meter-fill" id="efficiencyScoreBar"></div></div>
+                <div class="score-scale"><span>需注意</span><span>普通</span><span>良好</span><span>優</span></div>
+                <p id="efficiencyScoreText">尚未有足夠的有效加滿週期。</p>
+              </div>
+            </div>
+          </section>
+
+          <section class="panel range-panel">
+            <div class="panel-head"><div><h2>續航力估算</h2><p class="muted">完整油箱為理論值；安全續航會扣除預留油量；保守續航採近期較低油耗估算。</p></div></div>
+            <div class="range-visual">
+              <div class="range-road"><i id="rangeRoadFill"></i><span class="range-car">🚙</span></div>
+              <div class="range-values" id="rangeValues"></div>
+            </div>
+          </section>
+
+          <section class="panel strengths-panel">
+            <div class="panel-head"><h2>油耗與續航優點</h2></div>
+            <div class="evaluation-list good" id="efficiencyStrengths"></div>
+          </section>
+
+          <section class="panel weaknesses-panel">
+            <div class="panel-head"><h2>需要注意的地方</h2></div>
+            <div class="evaluation-list warn" id="efficiencyWeaknesses"></div>
+          </section>
+
+          <section class="panel efficiency-wide">
+            <div class="panel-head"><div><h2>有效油耗週期明細</h2><p class="muted">距離與公升數包含歷史推估資料時會另外標示；建議未來每次加滿都拍攝里程表。</p></div></div>
+            <div class="table-scroll"><table class="data-table efficiency-cycle-table"><thead><tr><th>結束日期</th><th>行駛距離</th><th>加油量</th><th>油耗</th><th>每100公里油費</th><th>相對表現</th><th>資料性質</th></tr></thead><tbody id="efficiencyCycleBody"></tbody></table></div>
+          </section>
+
+          <section class="panel efficiency-wide fleet-efficiency-panel">
+            <div class="panel-head"><div><h2>全部車輛油耗與續航比較</h2><p class="muted">只有資料完整且已設定油箱容量的車輛才能計算續航；沒有資料的車輛會顯示待補。</p></div></div>
+            <div class="table-scroll"><table class="data-table"><thead><tr><th>車輛</th><th>近期油耗</th><th>車型參考</th><th>達成率</th><th>安全續航</th><th>保守續航</th><th>評價</th></tr></thead><tbody id="fleetEfficiencyBody"></tbody></table></div>
+          </section>
+        </div>
+      </section>
+
+      <section class="view" id="view-analysis">
+        <div class="section-toolbar"><div><h2>成本分析</h2><p>比較油費、維修、輪胎、稅金保險及每公里綜合成本。</p></div><label class="inline-control">固定支出認列<select id="costRecognitionSelect"><option value="cash">現金制（繳費月份）</option><option value="accrual">攤提制（平均分攤）</option></select></label></div>
+        <div class="analysis-grid">
+          <section class="panel"><div class="panel-head"><h2>年度費用結構</h2><span class="muted" id="analysisYearLabel"></span></div><div class="large-donut-wrap"><div class="donut large" id="analysisDonut"><div><small>年度總支出</small><strong id="analysisTotal">$0</strong></div></div><div class="donut-legend" id="analysisLegend"></div></div></section>
+          <section class="panel"><div class="panel-head"><h2>每公里成本</h2></div><div class="cost-cards" id="costCards"></div></section>
+          <section class="panel analysis-wide"><div class="panel-head"><div><h2>月度成本趨勢 <small class="chart-hover-hint">滑鼠移動查看詳細資料</small></h2><div class="legend"><span><i class="dot blue"></i>燃油費</span><span><i class="dot purple"></i>維修保養</span><span><i class="dot amber"></i>稅金保險驗車</span></div></div></div><svg id="costChart" viewBox="0 0 1000 360" role="img" aria-label="月度成本趨勢圖"></svg></section>
+        </div>
+      </section>
+
+      <section class="view" id="view-automation">
+        <div class="section-toolbar automation-toolbar">
+          <div><h2>自動運行與提醒中心</h2><p>開啟系統時、定時檢查與重新取得焦點時，自動更新零件、保養、驗車、保險與稅費提醒。</p></div>
+          <div class="toolbar-actions">
+            <button class="btn btn-teal" id="runAutomationNow" type="button">⟳ 立即重新評估</button>
+            <button class="btn btn-primary" id="requestNotificationPermission" type="button">🔔 啟用系統通知</button>
+            <button class="btn btn-secondary" id="installPwaButton" type="button" hidden>安裝到裝置</button>
+          </div>
+        </div>
+        <div class="kpi-grid compact-kpis" id="automationKpis"></div>
+        <div class="automation-grid">
+          <section class="panel automation-settings-panel">
+            <div class="panel-head"><div><h2>自動檢查設定</h2><p class="muted">設定保存在目前瀏覽器，不會公開到 GitHub 程式碼。</p></div></div>
+            <div class="automation-settings" id="automationSettingsForm">
+              <label class="automation-switch"><span><strong>啟用自動評估</strong><small>開啟系統及排程時間到時重新計算所有車輛。</small></span><input id="autoEnabled" type="checkbox" /></label>
+              <label class="automation-switch"><span><strong>自動建立零件提醒</strong><small>依零件資料庫、歷史工單及檢查結果更新提醒。</small></span><input id="autoPartReminders" type="checkbox" /></label>
+              <label class="automation-switch"><span><strong>自動建立法定與到期事項</strong><small>依車輛資料建立年度稅費，並同步驗車、保險與繳費提醒。</small></span><input id="autoObligationReminders" type="checkbox" /></label>
+              <label class="automation-switch"><span><strong>瀏覽器系統通知</strong><small>需在 HTTPS 的 GitHub Pages 上授權；本機直接開啟檔案不支援。</small></span><input id="autoBrowserNotifications" type="checkbox" /></label>
+              <label class="automation-switch"><span><strong>自動檢查程式更新</strong><small>偵測 GitHub Pages 發布的新版本並顯示更新按鈕。</small></span><input id="autoUpdateCheck" type="checkbox" /></label>
+              <label class="automation-select"><span>系統開啟期間檢查頻率</span><select id="autoCheckInterval"><option value="1">每1小時</option><option value="6">每6小時</option><option value="12">每12小時</option><option value="24">每24小時</option></select></label>
+              <label class="automation-select"><span>一般提前提醒天數</span><select id="autoLeadDays"><option value="30">提前30天</option><option value="60">提前60天</option><option value="90">提前90天</option></select></label>
+              <label class="automation-select"><span>一般提前提醒里程</span><select id="autoLeadKm"><option value="1000">提前1,000 km</option><option value="2000">提前2,000 km</option><option value="3000">提前3,000 km</option></select></label>
+            </div>
+          </section>
+          <section class="panel automation-runtime-panel">
+            <div class="panel-head"><div><h2>GitHub／PWA運行狀態</h2><p class="muted">GitHub Pages 採 HTTPS，可啟用離線快取、安裝與通知。</p></div><button class="link-btn" id="checkAppUpdateNow" type="button">檢查更新</button></div>
+            <div class="runtime-status-list" id="automationRuntimeStatus"></div>
+            <div class="automation-actions">
+              <button class="btn btn-secondary" id="clearAutomationLog" type="button">清除運行紀錄</button>
+              <button class="btn btn-secondary" id="downloadAutomationCsv" type="button">匯出自動提醒CSV</button>
+            </div>
+          </section>
+          <section class="panel automation-wide">
+            <div class="panel-head"><div><h2>全部車輛自動待辦</h2><p class="muted">逾期、30天／1,000公里內為優先；一般提醒門檻可在上方調整。</p></div><span class="muted" id="automationAlertSummary">—</span></div>
+            <div class="table-scroll"><table class="data-table automation-alert-table"><thead><tr><th>優先度</th><th>車輛</th><th>提醒事項</th><th>期限</th><th>剩餘狀態</th><th>來源</th><th>操作</th></tr></thead><tbody id="automationAlertBody"></tbody></table></div>
+          </section>
+          <section class="panel automation-wide">
+            <div class="panel-head"><div><h2>自動運行紀錄</h2><p class="muted">記錄最近的啟動檢查、手動檢查、資料更新與通知結果。</p></div><span class="muted" id="automationLastRun">尚未執行</span></div>
+            <div class="automation-log" id="automationLog"></div>
+          </section>
+          <section class="panel automation-wide automation-limit-note">
+            <div class="panel-head"><h2>背景提醒能力說明</h2></div>
+            <div class="automation-note-grid">
+              <div><strong>系統開啟時</strong><p>所有瀏覽器都會自動重新評估並顯示提醒。</p></div>
+              <div><strong>安裝成PWA後</strong><p>支援的瀏覽器會嘗試每日背景檢查；不支援時改為下次開啟立即檢查。</p></div>
+              <div><strong>完全關閉仍保證通知</strong><p>需要推播後端或郵件服務；純 GitHub Pages 無法對所有瀏覽器保證執行。</p></div>
+              <div><strong>資料保存位置</strong><p>系統已保留既有車輛、加油、維修、稅費與評估資料；之後新增或修改的內容仍保存在目前瀏覽器。</p></div>
+            </div>
+          </section>
+        </div>
+      </section>
+
+      <section class="view" id="view-reminders">
+        <div class="section-toolbar">
+          <div><h2>保養提醒</h2><p>日期與里程雙重判斷，先到者優先提醒；並可產生交給維修廠查看的歷史清單。</p></div>
+          <div class="toolbar-actions">
+            <button class="btn btn-secondary" id="printServiceShopReportTop" type="button">🧾 維修廠查看清單</button>
+            <button class="btn btn-primary" id="addReminder">＋ 新增提醒</button>
+          </div>
+        </div>
+        <div class="reminder-cards" id="reminderCards"></div>
+
+        <section class="panel service-shop-panel">
+          <div class="panel-head service-shop-head">
+            <div>
+              <h2>🧾 維修廠查看清單</h2>
+              <p class="muted">整理歷年已更換零件、維修工單與目前應檢查項目，避免技師重複更換剛做過的零件。</p>
+            </div>
+            <div class="service-shop-controls">
+              <label>歷史範圍
+                <select id="serviceShopYears">
+                  <option value="3">最近3年</option>
+                  <option value="5" selected>最近5年</option>
+                  <option value="all">全部紀錄</option>
+                  <option value="custom">自訂日期</option>
+                </select>
+              </label>
+              <label class="service-shop-date-control">起始日期
+                <span class="date-input-shell"><input id="serviceShopStartDate" type="date" /></span>
+              </label>
+              <label class="service-shop-date-control">結束日期
+                <span class="date-input-shell"><input id="serviceShopEndDate" type="date" /></span>
+              </label>
+              <button class="btn btn-secondary service-shop-date-reset" id="serviceShopResetDates" type="button">恢復最近5年</button>
+              <label class="service-shop-check"><input id="serviceShopIncludeCosts" type="checkbox" /> 顯示歷史金額</label>
+              <button class="btn btn-primary" id="printServiceShopReport" type="button">列印／另存 PDF</button>
+            </div>
+          </div>
+          <div class="service-shop-vehicle" id="serviceShopVehicleInfo">—</div>
+          <div class="service-shop-kpis" id="serviceShopKpis"></div>
+          <div class="service-shop-grid">
+            <section class="service-shop-history-section">
+              <div class="panel-head compact"><h3>近年已更換／維修項目</h3><span class="muted" id="serviceShopHistorySummary">—</span></div>
+              <div class="table-scroll"><table class="data-table service-shop-table"><thead><tr><th>日期</th><th>里程</th><th>零件／作業</th><th>維修廠</th><th>工單</th><th>金額</th></tr></thead><tbody id="serviceShopHistoryBody"></tbody></table></div>
+            </section>
+            <section class="service-shop-priority-section">
+              <div class="panel-head compact"><h3>本次建議請技師檢查</h3><span class="muted">由零件資料庫自動評估</span></div>
+              <div class="table-scroll"><table class="data-table service-shop-table"><thead><tr><th>優先度</th><th>零件／系統</th><th>最近紀錄</th><th>判斷原因</th><th>建議</th></tr></thead><tbody id="serviceShopPriorityBody"></tbody></table></div>
+            </section>
+          </div>
+          <div class="service-shop-note"><strong>給維修廠的使用方式：</strong>先核對「已更換紀錄」，再針對「建議檢查」逐項量測。沒有異常時，不應只因車齡或年份直接更換檢查型零件。</div>
+        </section>
+      </section>
+
+      <section class="view" id="view-obligations">
+        <div class="section-toolbar">
+          <div><h2>稅金・保險・驗車管理</h2><p>目前車輛：<strong id="obligationVehicleLabel">—</strong>。集中管理繳費、保障期間、到期提醒及下一期資料。LEXUS 已依 3000cc 自用小客車級距建立年度牌照稅與公路養管費。</p></div>
+          <button class="btn btn-primary" id="addObligation">＋ 新增到期／繳費紀錄</button>
+        </div>
+        <div class="kpi-grid compact-kpis" id="obligationKpis"></div>
+        <div class="obligation-layout">
+          <section class="panel">
+            <div class="panel-head compact"><h2>近期待辦與到期</h2><span class="muted">點擊「設為已繳」會同步關閉舊提醒</span></div>
+            <div class="obligation-upcoming" id="obligationUpcoming"></div>
+          </section>
+          <section class="panel">
+            <div class="panel-head compact"><h2>年度費用分類</h2><span class="muted" id="obligationYearLabel"></span></div>
+            <div class="obligation-bars" id="obligationBars"></div>
+          </section>
+        </div>
+        <div class="panel filter-panel">
+          <div class="filter-grid obligation-filter-grid">
+            <label>項目類型<select id="obligationTypeFilter"><option value="">全部</option><option>保險</option><option>強制險</option><option>任意險</option><option>牌照稅</option><option>公路養管費</option><option>燃料使用費</option><option>驗車</option><option>其他</option></select></label>
+            <label>繳納狀態<select id="obligationStatusFilter"><option value="">全部</option><option>待確認</option><option>待繳</option><option>已繳</option><option>免繳</option></select></label>
+            <label>年度<select id="obligationYearFilter"><option value="">全部年度</option></select></label>
+            <label>關鍵字<input id="obligationKeyword" type="search" placeholder="保險公司、保單號、備註" /></label>
+          </div>
+        </div>
+        <div class="panel table-panel full-panel">
+          <div class="table-scroll"><table class="data-table obligation-table"><thead><tr><th>類型</th><th>承辦單位／保險公司</th><th>保障／計費期間</th><th>到期／應繳日</th><th>金額</th><th>繳納日</th><th>狀態</th><th>保單／單號</th><th>操作</th></tr></thead><tbody id="obligationTableBody"></tbody></table></div>
+        </div>
+      </section>
+
+      <section class="view" id="view-vehicle">
+        <div class="section-toolbar">
+          <div><h2>車輛主檔</h2><p>可建立多台車，並分別管理每台車的基本資料、里程、油耗、保養與提醒。</p></div>
+          <div class="toolbar-actions">
+            <button class="btn btn-primary" id="addVehicle" type="button">＋ 新增車輛</button>
+            <button class="btn btn-secondary" id="saveVehicle" type="button">儲存目前車輛</button>
+          </div>
+        </div>
+        <div class="vehicle-manage-layout">
+          <aside class="panel vehicle-list-panel">
+            <div class="panel-head compact"><h2>🚙 車輛清單</h2><span class="muted">點擊切換查看</span></div>
+            <div class="vehicle-cards" id="vehicleCards"></div>
+          </aside>
+          <form class="panel vehicle-form" id="vehicleForm">
+            <div class="form-section"><h3>基本資料</h3><div class="form-grid">
+              <label>車輛名稱<input name="name" required /></label>
+              <label>車牌號碼<input name="plate" /></label>
+              <label>年份<input name="year" type="number" min="1980" max="2100"  inputmode="decimal" /></label>
+              <label>製造年月<input name="manufactureDate" type="month" /></label>
+              <label>排氣量（CC）<input name="engineCc" type="number" min="0" step="1"  inputmode="decimal" /></label>
+              <label>燃料種類<select name="fuelType"><option value="">尚未設定</option><option>汽油（油品未註明）</option><option>95無鉛</option><option>汽油（油品未註明）</option><option>92無鉛</option><option>98無鉛</option><option>柴油</option><option>油電</option><option>電動</option><option>其他</option></select></label>
+              <label>車輛用途<select name="usage"><option value="">尚未設定</option><option>個人／家庭</option><option>牧場公務</option><option>公司公務</option><option>混合使用</option></select></label>
+              <label>目前里程<input name="odometer" type="number" min="0"  inputmode="decimal" /></label>
+            </div></div>
+            <div class="form-section"><h3>油耗與續航設定</h3><div class="form-grid">
+              <label>油箱容量（L）<input name="fuelTankCapacity" type="number" min="1" step="0.1" placeholder="例如：70"  inputmode="decimal" /></label>
+              <label>安全預留油量（L）<input name="reserveLiters" type="number" min="0" step="0.1" placeholder="例如：7"  inputmode="decimal" /></label>
+              <label>車型參考油耗（km/L）<input name="benchmarkEfficiency" type="number" min="1" step="0.1" placeholder="例如：8.9"  inputmode="decimal" /></label>
+              <label>參考資料說明<input name="efficiencyReference" placeholder="例如：原廠規格或EPA綜合油耗" /></label>
+            </div></div>
+            <div class="form-section"><h3>保養與到期設定</h3><div class="form-grid">
+              <label>保養方式<select name="maintenanceMode"><option value="">尚未設定</option><option>不定期保養</option><option>定期保養</option></select></label>
+              <label>定期保養里程<input name="serviceKm" type="number" min="0" step="500" placeholder="不定期可留空"  inputmode="decimal" /></label>
+              <label>定期保養月數<input name="serviceMonths" type="number" min="1"  inputmode="decimal" /></label>
+              <label>最近保險到期日<input name="insuranceDate" type="date" readonly title="由稅金・保險・驗車紀錄自動同步" /></label>
+              <label>最近驗車到期日<input name="inspectionDate" type="date" readonly title="由稅金・保險・驗車紀錄自動同步" /></label>
+            </div></div>
+            <div class="form-section"><h3>備註</h3><label><textarea name="notes" rows="5" placeholder="例如：輪胎規格、常用機油、原廠聯絡資訊等"></textarea></label></div>
+            <div class="vehicle-form-actions">
+              <button class="btn btn-secondary" id="duplicateVehicle" type="button">複製目前車輛設定</button>
+              <button class="btn btn-secondary danger-outline" id="deleteVehicle" type="button">刪除目前車輛</button>
+              <button class="btn btn-primary" id="saveVehicleBottom" type="button">儲存目前車輛</button>
+            </div>
+          </form>
+        </div>
+        <section class="panel mileage-panel">
+          <div class="panel-head"><div><h2>🧭 里程歷史與資料完整度</h2><p class="muted" id="mileageQualityText">—</p></div><button class="btn btn-secondary" id="addMileageLog" type="button">＋ 新增里程紀錄</button></div>
+          <div class="table-scroll"><table><thead><tr><th>日期</th><th>里程</th><th>來源</th><th>備註</th><th>操作</th></tr></thead><tbody id="mileageLogBody"></tbody></table></div>
+        </section>
+      </section>
+
+      <section class="view" id="view-sync">
+        <div class="section-toolbar"><div><h2>Google Sheets 雲端同步</h2><p>透過 Apps Script 將家庭帳號資料同步到同一份 Google Sheet，支援跨裝置讀取、更新及版本衝突保護。</p></div></div>
+        <div class="sync-status-grid">
+          <div class="metric-card"><span>連線狀態</span><strong id="cloudConnectionStatus">尚未設定</strong><small id="cloudConnectionDetail">請先填入 Apps Script Web App 網址</small></div>
+          <div class="metric-card"><span>雲端登入</span><strong id="cloudLoginStatus">未登入</strong><small id="cloudWorkspaceStatus">家庭共用資料庫</small></div>
+          <div class="metric-card"><span>雲端版本</span><strong id="cloudRevisionStatus">—</strong><small id="cloudRevisionDetail">尚未同步</small></div>
+          <div class="metric-card"><span>最近同步</span><strong id="cloudLastSyncStatus">—</strong><small id="cloudLastSyncDetail">尚無紀錄</small></div>
+        </div>
+        <div class="sync-layout">
+          <section class="panel sync-settings-panel">
+            <div class="panel-head"><div><h2>連線設定</h2><p class="muted">Apps Script 部署完成後，貼上結尾為 /exec 的Web App網址。</p></div></div>
+            <div class="sync-form">
+              <label class="full" for="appsScriptUrl">Apps Script Web App網址<input id="appsScriptUrl" type="url" placeholder="https://script.google.com/macros/s/.../exec" /></label>
+              <label>雲端帳號<input id="cloudUsername" type="text" readonly /></label>
+              <label for="cloudPassword">雲端密碼<input id="cloudPassword" type="password" inputmode="numeric" placeholder="請輸入雲端密碼" autocomplete="current-password" /></label>
+              <label class="sync-check"><input id="cloudAutoSync" type="checkbox" /><span>登入雲端後自動同步</span></label>
+              <label>自動同步間隔<select id="cloudSyncInterval"><option value="5">每5分鐘</option><option value="15">每15分鐘</option><option value="30">每30分鐘</option><option value="60">每60分鐘</option></select></label>
+              <div class="sync-actions full">
+                <button class="btn btn-secondary" id="saveCloudSettings" type="button">儲存設定</button>
+                <button class="btn btn-secondary" id="testCloudConnection" type="button">測試連線</button>
+                <button class="btn btn-primary" id="cloudLoginButton" type="button">登入雲端資料庫</button>
+                <button class="btn btn-secondary" id="cloudLogoutButton" type="button">登出雲端</button>
+              </div>
+            </div>
+          </section>
+          <section class="panel sync-operation-panel">
+            <div class="panel-head"><div><h2>同步操作</h2><p class="muted">下載雲端資料前會自動建立本機快照；若版本衝突，系統不會直接覆蓋。</p></div></div>
+            <div class="sync-operation-cards">
+              <button class="sync-operation-card" id="cloudPullButton" type="button"><span>↓</span><strong>從Google Sheet下載</strong><small>以雲端資料更新這台裝置，更新前建立還原快照</small></button>
+              <button class="sync-operation-card" id="cloudPushButton" type="button"><span>↑</span><strong>上傳目前資料</strong><small>版本一致時，將目前車輛資料更新到Google Sheet</small></button>
+              <button class="sync-operation-card warning" id="cloudForcePushButton" type="button"><span>!</span><strong>強制覆蓋雲端</strong><small>僅在確定本機資料較新時使用，操作前會再次確認</small></button>
+            </div>
+            <div class="sync-log" id="cloudSyncLog" aria-live="polite"><div>等待設定Google Sheets＋Apps Script連線。</div></div>
+          </section>
+        </div>
+        <section class="panel sync-guide-panel">
+          <div class="panel-head"><div><h2>為什麼需要Google Sheets＋Apps Script？</h2><p class="muted">GitHub Pages只負責顯示網頁；瀏覽器本機資料不會自動跨電腦或手機同步。</p></div></div>
+          <div class="sync-guide-grid">
+            <div><strong>Google Sheet</strong><span>保存家庭共用的車輛資料、可閱讀資料表與同步版本。</span></div>
+            <div><strong>Apps Script</strong><span>負責登入驗證、讀寫資料、衝突鎖定與操作紀錄，不讓前端直接取得試算表權限。</span></div>
+            <div><strong>GitHub Pages</strong><span>部署PWA介面與程式更新；不應在公開原始碼內放完整私人車輛資料。</span></div>
+          </div>
+          <div class="pdf-note"><strong>安全提醒：</strong>正式啟用 Google Sheet 後，請在 Apps Script 管理帳號密碼；系統畫面不會顯示預設帳號或密碼提示。</div>
+        </section>
+      </section>
+
+      <section class="view" id="view-export">
+        <div class="section-toolbar"><div><h2>報表匯出與備份</h2><p>可列印或另存為 PDF、匯出 CSV，並使用 JSON 完整備份還原系統資料。</p></div></div>
+
+        <section class="panel pdf-export-panel">
+          <div class="panel-head"><div><h2>🖨 可列印／另存 PDF 報告</h2><p class="muted">點擊後會開啟列印版面；在列印視窗選擇「另存為 PDF」即可產生 PDF 檔案。</p></div></div>
+          <div class="export-grid pdf-export-grid">
+            <button class="export-card pdf-card" id="printCurrentVehiclePdf"><span>📄</span><strong>開啟目前車輛列印／另存 PDF</strong><small>主檔、油耗、加油、維修、提醒、保險稅費與里程紀錄</small></button>
+            <button class="export-card pdf-card" id="printServiceShopPdf"><span>🧾</span><strong>維修廠查看清單 PDF</strong><small>歷年已更換零件、最近工單與本次建議檢查項目</small></button>
+            <button class="export-card pdf-card" id="printFleetOverviewPdf"><span>🚙</span><strong>開啟全部車輛總覽列印／另存 PDF</strong><small>比較所有車輛的里程、油耗、成本與近期到期事項</small></button>
+            <button class="export-card pdf-card" id="printFullBackupPdf"><span>🗂</span><strong>完整資料列印存檔 PDF</strong><small>將全部車輛與所有紀錄依車輛分組列印存檔；此檔不能還原系統</small></button>
+          </div>
+          <div class="pdf-note"><strong>注意：</strong>PDF 適合列印、閱讀及留存，但不能匯回系統。需要日後還原資料時，仍應另外下載 JSON 完整備份。</div>
+        </section>
+
+        <div class="export-grid export-secondary-grid">
+          <button class="export-card" id="exportFuelCsv"><span>⛽</span><strong>匯出加油紀錄 CSV</strong><small>適合 Excel 開啟與分析</small></button>
+          <button class="export-card" id="exportEfficiencyCsv"><span>◌</span><strong>匯出油耗續航評估 CSV</strong><small>包含油耗評價、續航估算與有效週期</small></button>
+          <button class="export-card" id="exportMaintenanceCsv"><span>🛠</span><strong>匯出維修保養 CSV</strong><small>包含日期、里程、項目與金額</small></button>
+          <button class="export-card" id="exportMaintenanceEvaluationCsv"><span>◎</span><strong>匯出車齡維修效益 CSV</strong><small>包含年度預算、實際支出、分類與效益評分</small></button>
+          <button class="export-card" id="exportCurrentVehicleCsv"><span>🚙</span><strong>匯出目前車輛摘要 CSV</strong><small>彙整目前查看車輛的主檔與年度統計</small></button>
+          <button class="export-card" id="exportObligationCsv"><span>▣</span><strong>匯出稅金保險驗車 CSV</strong><small>目前車輛的到期、金額與繳納狀態</small></button>
+          <button class="export-card" id="exportFuelQualityCsv"><span>✓</span><strong>匯出加油資料品質 CSV</strong><small>估算、回推、異常與人工確認狀態</small></button>
+          <button class="export-card" id="exportCalendarIcs"><span>📅</span><strong>匯出全部提醒行事曆 ICS</strong><small>驗車、保險、稅費與保養，含90／30／7天提醒</small></button>
+          <button class="export-card" id="downloadLatestSnapshot"><span>↶</span><strong>下載最近本機快照</strong><small>升級、匯入或清空前的自動還原點</small></button>
+          <button class="export-card" id="restoreLatestSnapshot"><span>⟲</span><strong>還原最近本機快照</strong><small>覆蓋目前資料前會再建立一份保護快照</small></button>
+          <button class="export-card" id="exportJson"><span>💾</span><strong>下載 JSON 完整備份</strong><small>可在未來匯回系統，包含所有車輛與設定</small></button>
+          <label class="export-card upload"><span>⇧</span><strong>匯入 JSON 系統備份</strong><small>選擇先前下載的 JSON 檔還原</small><input id="importJson" type="file" accept="application/json" /></label>
+          <button class="export-card danger" id="resetDemo"><span>↻</span><strong>清空所有紀錄</strong><small>保留目前車輛主檔，只清除加油、維修、提醒、稅費與里程紀錄</small></button>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <div class="modal-backdrop" id="modalBackdrop" hidden>
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+      <div class="modal-head"><div><small id="modalEyebrow"></small><h2 id="modalTitle"></h2></div><button class="icon-btn close-modal" aria-label="關閉">×</button></div>
+      <form id="modalForm" class="modal-form"></form>
+    </div>
+  </div>
+
+  <div class="toast-stack" id="toastStack" aria-live="polite"></div>
+
+  <script src="./app.js?v=5.6.6"></script>
+  <script src="./auth-sync.js?v=5.6.6"></script>
+</body>
+</html>

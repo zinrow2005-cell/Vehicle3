@@ -1,0 +1,44 @@
+{
+  "name": "車輛維修保養與油耗管理中心",
+  "short_name": "Vehicle Hub",
+  "description": "家庭車輛油耗、維修、零件汰換、稅費、驗車、自動提醒與跨裝置同步管理",
+  "lang": "zh-TW",
+  "start_url": "./index.html?v=5.6.6",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#07172d",
+  "theme_color": "#07172d",
+  "categories": [
+    "utilities",
+    "productivity"
+  ],
+  "icons": [
+    {
+      "src": "./icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "./icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "./icon-maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "./icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ],
+  "id": "./",
+  "prefer_related_applications": false
+}
