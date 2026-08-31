@@ -1,4 +1,14 @@
-車輛維修保養與油耗管理中心 V5.6.6－GitHub資料保留部署版
+車輛維修保養與油耗管理中心 V5.6.7－GitHub資料保留部署版
+
+【V5.6.7 A4直式PDF方向修正】
+- 修正「PDF頁面是直式，但報表內容整頁橫倒90度」問題。
+- 根因：舊版 reportCss 預設 landscape，維修廠查看清單又額外指定 landscape；列印視窗若以直向另存，部分瀏覽器會將橫式內容旋轉塞入直式頁面。
+- 所有 PDF 報表統一固定為真正 A4 直式 210×297mm，不再接受 landscape 方向覆寫。
+- 維修廠查看清單、全部車輛總覽、目前車輛完整報告、完整資料列印存檔全部走同一個直式列印路徑。
+- 寬表格與維修廠清單重新調整字級、換行、padding，避免改直式後發生欄位裁切。
+- PDF內容根節點強制 transform:none／rotate:none，防止整頁內容被旋轉。
+- 實際PDF渲染驗收：A4 595.276×841.89pt、Page rotation 0°；7欄維修廠表與10欄寬表均可在直式頁面內完整顯示。
+- GitHub Actions 新增 PDF portrait-layout regression。
 
 【V5.6.6 iPhone／iPad全輸入框修正】
 - 不只登入頁：所有新增／編輯彈出視窗在iPhone／iPad都不再程式自動focus，避免iOS出現「欄位已focus但鍵盤不彈出」。

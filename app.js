@@ -2,7 +2,7 @@
   'use strict';
 
   const SCHEMA_VERSION = 58;
-  const APP_VERSION = '5.6.6';
+  const APP_VERSION = '5.6.7';
   const STORAGE_KEY = 'vehicleMaintenanceFuelV48';
   const LEGACY_STORAGE_KEYS = ['vehicleMaintenanceFuelV47','vehicleMaintenanceFuelV46','vehicleMaintenanceFuelV45','vehicleMaintenanceFuelV44','vehicleMaintenanceFuelV43','vehicleMaintenanceFuelV42','vehicleMaintenanceFuelV41','vehicleMaintenanceFuelV40','vehicleMaintenanceFuelV39','vehicleMaintenanceFuelV38','vehicleMaintenanceFuelV37','vehicleMaintenanceFuelV36','vehicleMaintenanceFuelV35','vehicleMaintenanceFuelV34','vehicleMaintenanceFuelV33','vehicleMaintenanceFuelV31','vehicleMaintenanceFuelV1','vehicleMaintenanceFuelV3'];
   const APPEARANCE_STORAGE_KEY = 'vehicleMaintenanceAppearanceV1';
@@ -3822,7 +3822,7 @@
     const events=[];const seen=new Set();
     for(const r of state.reminders||[]){if(r.status==='done'||!r.targetDate)continue;const key=`r-${r.id}-${r.targetDate}`;if(seen.has(key))continue;seen.add(key);events.push({uid:`${key}@vehicle-hub`,date:r.targetDate,title:`${vehicleById(r.vehicleId).name}｜${r.title}`,description:[r.category,r.notes].filter(Boolean).join('｜')});}
     for(const o of state.obligations||[]){if(!['待繳','待確認'].includes(o.status)||!o.dueDate)continue;const key=`o-${o.id}-${o.dueDate}`;if(seen.has(key))continue;seen.add(key);events.push({uid:`${key}@vehicle-hub`,date:o.dueDate,title:`${vehicleById(o.vehicleId).name}｜${o.type}${o.status==='待確認'?'狀態待確認':'到期'}`,description:[o.provider,o.notes,o.amount?`金額 ${o.amount} 元`:null].filter(Boolean).join('｜')});}
-    const lines=['BEGIN:VCALENDAR','VERSION:2.0','PRODID:-//Vehicle Hub//V5.6.6//ZH-TW','CALSCALE:GREGORIAN','METHOD:PUBLISH','X-WR-CALNAME:車輛保養與到期提醒'];
+    const lines=['BEGIN:VCALENDAR','VERSION:2.0','PRODID:-//Vehicle Hub//V5.6.7//ZH-TW','CALSCALE:GREGORIAN','METHOD:PUBLISH','X-WR-CALNAME:車輛保養與到期提醒'];
     events.forEach(e=>{lines.push('BEGIN:VEVENT',`UID:${icsEscape(e.uid)}`,`DTSTAMP:${new Date().toISOString().replace(/[-:]/g,'').replace(/\.\d{3}Z$/,'Z')}`,`DTSTART;VALUE=DATE:${dateToIcs(e.date)}`,`SUMMARY:${icsEscape(e.title)}`,`DESCRIPTION:${icsEscape(e.description)}`);[90,30,7].forEach(d=>lines.push('BEGIN:VALARM',`TRIGGER:-P${d}D`,'ACTION:DISPLAY',`DESCRIPTION:${icsEscape(e.title)}（提前${d}天）`,'END:VALARM'));lines.push('END:VEVENT');});
     lines.push('END:VCALENDAR');return lines.join('\r\n');
   }
@@ -4438,12 +4438,12 @@
   function reportSummaryCards(items){
     return `<div class="summary-grid">${items.map(x=>`<div class="summary-card"><small>${esc(x[0])}</small><strong>${x[1]}</strong>${x[2]?`<span>${esc(x[2])}</span>`:''}</div>`).join('')}</div>`;
   }
-  function reportCss(orientation='landscape'){return `
-    @page{size:A4 ${orientation};margin:9mm 9mm 12mm}
+  function reportCss(){return `
+    @page{size:210mm 297mm;margin:9mm 9mm 12mm}
     *{box-sizing:border-box}
-    html,body{margin:0;padding:0;color:#172b3a;background:#fff;font-family:"Microsoft JhengHei","Noto Sans TC",Arial,sans-serif;font-size:9.6pt;line-height:1.38}
-    body{print-color-adjust:exact;-webkit-print-color-adjust:exact}
-    .report{max-width:100%;margin:0 auto}
+    html,body{margin:0;padding:0;color:#172b3a;background:#fff;font-family:"Microsoft JhengHei","Noto Sans TC",Arial,sans-serif;font-size:9.6pt;line-height:1.38;writing-mode:horizontal-tb!important;text-orientation:mixed!important}
+    body{print-color-adjust:exact;-webkit-print-color-adjust:exact;transform:none!important;rotate:none!important}
+    .report{width:100%;max-width:100%;margin:0 auto;transform:none!important;rotate:none!important}
     .cover{border:2px solid #1b6aa8;border-radius:10px;padding:13px 16px;margin-bottom:11px;background:linear-gradient(135deg,#eef7ff,#f8fcff);break-inside:avoid}
     .cover h1{margin:0;color:#123f63;font-size:19pt}.cover .subtitle{margin-top:4px;color:#4c687d}.cover .meta{margin-top:8px;display:flex;gap:14px;flex-wrap:wrap;color:#36576e;font-size:8.8pt}
     h2{font-size:12.5pt;color:#164f78;margin:0 0 6px;padding-bottom:4px;border-bottom:2px solid #cce3f3}
@@ -4453,35 +4453,37 @@
     .summary-card{border:1px solid #b9d4e7;border-radius:7px;padding:7px;background:#f4f9fd;min-height:54px;break-inside:avoid}
     .summary-card small{display:block;color:#527087;font-size:7.8pt}.summary-card strong{display:block;color:#102f45;font-size:12pt;margin-top:2px;overflow-wrap:anywhere}.summary-card span{display:block;color:#58758a;font-size:7.4pt;margin-top:1px}
     .info-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:5px;margin-bottom:8px}.info-item{border:1px solid #d3e3ee;border-radius:6px;padding:6px;background:#fbfdff}.info-item b{display:block;color:#4b687d;font-size:7.6pt}.info-item span{display:block;color:#172b3a;font-weight:700;margin-top:1px}
-    .table-wrap{width:100%;overflow:visible;margin-bottom:5px}table{width:100%;border-collapse:collapse;font-size:7.7pt;table-layout:auto}thead{display:table-header-group}tfoot{display:table-footer-group}tr{break-inside:avoid}th,td{border:1px solid #bdd2e0;padding:3.5px 4px;vertical-align:top;word-break:normal;overflow-wrap:anywhere}th{background:#dcecf7;color:#173f5c;font-weight:800;text-align:left;white-space:nowrap}td.nowrap{white-space:nowrap;overflow-wrap:normal}.wide-table table{font-size:7.2pt}.wide-table th,.wide-table td{padding:3px 3.5px}tbody tr:nth-child(even){background:#f7fafc}.empty-cell{text-align:center;color:#6e8291;padding:10px}
+    .table-wrap{width:100%;overflow:visible;margin-bottom:5px}table{width:100%;border-collapse:collapse;font-size:7.7pt;table-layout:auto}thead{display:table-header-group}tfoot{display:table-footer-group}tr{break-inside:avoid}th,td{border:1px solid #bdd2e0;padding:3.5px 4px;vertical-align:top;word-break:normal;overflow-wrap:anywhere}th{background:#dcecf7;color:#173f5c;font-weight:800;text-align:left;white-space:nowrap}td.nowrap{white-space:nowrap;overflow-wrap:normal}.wide-table table{font-size:6.7pt;table-layout:auto}.wide-table th,.wide-table td{padding:2.6px 3px;white-space:normal;overflow-wrap:anywhere;word-break:break-word}.wide-table td.nowrap{white-space:nowrap;word-break:normal;overflow-wrap:normal}tbody tr:nth-child(even){background:#f7fafc}.empty-cell{text-align:center;color:#6e8291;padding:10px}
     .note{border-left:4px solid #2d87bd;background:#eef7fc;padding:6px 8px;margin:6px 0;color:#385b72}.warning{border-color:#d39721;background:#fff7e5}.danger{border-color:#c84242;background:#fff0f0}
     .page-break{break-before:page}.no-break{break-inside:avoid}
     .footer{margin-top:10px;padding-top:6px;border-top:1px solid #c8d8e4;color:#6a7e8e;font-size:7.5pt;text-align:center}
     @media(max-width:700px){.summary-grid{grid-template-columns:repeat(2,1fr)}.info-grid{grid-template-columns:repeat(2,1fr)}}
-    .service-shop-report{font-size:10.5pt;line-height:1.42}
-    .service-shop-report .cover{padding:12px 15px;margin-bottom:9px}
-    .service-shop-report .cover h1{font-size:21pt}
-    .service-shop-report .cover .subtitle{font-size:10.5pt}
-    .service-shop-report .cover .meta{font-size:9.5pt;gap:18px;white-space:nowrap}
-    .service-shop-report h2{font-size:13.5pt;margin-bottom:5px}
-    .service-shop-report .note{font-size:9.7pt;padding:7px 9px}
-    .service-shop-report .summary-grid{grid-template-columns:repeat(4,1fr);gap:7px}
-    .service-shop-report .summary-card{padding:8px;min-height:58px}
-    .service-shop-report .summary-card small{font-size:8.5pt}.service-shop-report .summary-card strong{font-size:13pt}.service-shop-report .summary-card span{font-size:8.2pt}
-    .service-shop-report .info-item b{font-size:8.5pt}.service-shop-report .info-item span{font-size:9.8pt}
-    .service-shop-report table{font-size:9.2pt;table-layout:auto}
-    .service-shop-report .wide-table table{font-size:8.6pt}
-    .service-shop-report th,.service-shop-report td{padding:4.2px 4.8px;white-space:nowrap;overflow-wrap:normal;vertical-align:middle}
-    .service-shop-report .wrap-cell{display:block;white-space:normal;min-width:35mm;line-height:1.35}
-    .service-shop-report .footer{font-size:8pt}
-    @media print{.screen-only{display:none!important}a{color:inherit;text-decoration:none}}
+    .service-shop-report{font-size:9.2pt;line-height:1.38}
+    .service-shop-report .cover{padding:10px 12px;margin-bottom:8px}
+    .service-shop-report .cover h1{font-size:18pt}
+    .service-shop-report .cover .subtitle{font-size:9.4pt}
+    .service-shop-report .cover .meta{font-size:8.3pt;gap:10px;white-space:normal}
+    .service-shop-report h2{font-size:11.8pt;margin-bottom:5px}
+    .service-shop-report .note{font-size:8.5pt;padding:6px 8px}
+    .service-shop-report .summary-grid{grid-template-columns:repeat(4,1fr);gap:5px}
+    .service-shop-report .summary-card{padding:6px;min-height:52px}
+    .service-shop-report .summary-card small{font-size:7.5pt}.service-shop-report .summary-card strong{font-size:10.7pt}.service-shop-report .summary-card span{font-size:7.2pt}
+    .service-shop-report .info-item b{font-size:7.6pt}.service-shop-report .info-item span{font-size:8.7pt}
+    .service-shop-report table{font-size:7.3pt;table-layout:auto}
+    .service-shop-report .wide-table table{font-size:6.7pt;table-layout:auto}
+    .service-shop-report th,.service-shop-report td{padding:3px 3.4px;white-space:normal;overflow-wrap:anywhere;word-break:break-word;vertical-align:middle}
+    .service-shop-report th{white-space:nowrap}
+    .service-shop-report td.nowrap{white-space:nowrap;overflow-wrap:normal;word-break:normal}
+    .service-shop-report .wrap-cell{display:block;white-space:normal;min-width:0;line-height:1.32}
+    .service-shop-report .footer{font-size:7.5pt}
+    @media print{html,body,.report{transform:none!important;rotate:none!important}.screen-only{display:none!important}a{color:inherit;text-decoration:none}}
   `;}
-  function openPrintReport(title, bodyHtml,{orientation='landscape'}={}){
+  function openPrintReport(title, bodyHtml){
     const win=window.open('','_blank');
     if(!win){toast('瀏覽器封鎖了列印視窗，請允許此頁開啟彈出視窗。','error');return;}
     const generated=new Date().toLocaleString('zh-TW',{hour12:false});
     win.document.open();
-    win.document.write(`<!doctype html><html lang="zh-Hant"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${esc(title)}</title><style>${reportCss(orientation)}</style></head><body><main class="report">${bodyHtml}<div class="footer">車輛維修保養與油耗管理中心 V5.6.6｜產生時間：${esc(generated)}｜列印時可選擇「另存為 PDF」</div></main><script>window.addEventListener('load',()=>setTimeout(()=>{window.focus();window.print();},350));<\/script></body></html>`);
+    win.document.write(`<!doctype html><html lang="zh-Hant"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${esc(title)}</title><style>${reportCss()}</style></head><body><main class="report">${bodyHtml}<div class="footer">車輛維修保養與油耗管理中心 V5.6.7｜產生時間：${esc(generated)}｜列印時可選擇「另存為 PDF」</div></main><script>window.addEventListener('load',()=>setTimeout(()=>{window.focus();window.print();},350));<\/script></body></html>`);
     win.document.close();
   }
   function maintenanceEvaluationReportHtml(vehicleId){
@@ -4653,7 +4655,7 @@
   $('#saveVehicleBottom').onclick=saveActiveVehicle;
 
   $('#printCurrentVehiclePdf').onclick=()=>{const v=activeVehicle();openPrintReport(`${v.name}_車輛完整報告_${today()}`,vehicleReportHtml(v.id));};
-  const printServiceShop=()=>{const v=activeVehicle();const range=serviceShopControlRange();const includeCosts=!!$('#serviceShopIncludeCosts').checked;const rangeName=(range.start||range.end)?`_${range.start||'最早'}_${range.end||'最新'}`:'';openPrintReport(`${v.name}_維修廠查看清單${rangeName}_${today()}`,serviceShopReportHtml(v.id,range.value,includeCosts,range.start,range.end),{orientation:'landscape'});};
+  const printServiceShop=()=>{const v=activeVehicle();const range=serviceShopControlRange();const includeCosts=!!$('#serviceShopIncludeCosts').checked;const rangeName=(range.start||range.end)?`_${range.start||'最早'}_${range.end||'最新'}`:'';openPrintReport(`${v.name}_維修廠查看清單${rangeName}_${today()}`,serviceShopReportHtml(v.id,range.value,includeCosts,range.start,range.end));};
   $('#printServiceShopReport').onclick=printServiceShop;
   $('#printServiceShopReportTop').onclick=printServiceShop;
   $('#printServiceShopPdf').onclick=printServiceShop;

@@ -1,7 +1,7 @@
 {
-  "version": "5.6.6",
+  "version": "5.6.7",
   "schemaVersion": 58,
-  "buildDate": "2026-08-29",
-  "notes": "V5.6.6：針對實體iPad Safari／主畫面PWA仍無法點擊帳號密碼輸入框，移除登入欄位上的touchend/click二次focus，改為完全保留Safari原生點擊焦點；只在備援按鈕內程式focus。iPad採專用非fixed登入遮罩與原生輸入相容CSS，並為styles.css、app.js、auth-sync.js加入V5.6.6快取破除參數；Service Worker對關鍵UI資源改為network-first並自動skipWaiting，避免iPad沿用舊版輸入程式。完整保留V5.6.5全輸入框、V5.6.3 VOLVO工單與V5.6.2 LEXUS油耗修正。",
-  "title": "V5.6.6 實體iPad原生輸入修正版"
+  "buildDate": "2026-08-31",
+  "notes": "V5.6.7：修正報表匯出後PDF頁面為直式但內容整頁橫倒90度的問題。所有列印／另存PDF統一使用真正A4直式210×297mm頁面，不再使用landscape排版；移除維修廠查看清單的橫式強制設定，並針對直式頁面重新調整寬表格、維修廠清單字級、換行與技師檢查欄，避免內容裁切或橫向溢出。另加入PDF直式回歸測試，完整保留V5.6.6實體iPad原生輸入、V5.6.3 VOLVO工單與V5.6.2 LEXUS油耗修正。",
+  "title": "V5.6.7 A4直式PDF方向修正版"
 }

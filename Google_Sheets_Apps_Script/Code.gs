@@ -1,6 +1,6 @@
 'use strict';
 
-const VEHICLE_HUB_VERSION = '5.6.6';
+const VEHICLE_HUB_VERSION = '5.6.7';
 const USERS_SHEET = 'Users';
 const DATA_SHEET = 'SystemData';
 const AUDIT_SHEET = 'AuditLog';
