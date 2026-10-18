@@ -1,6 +1,6 @@
 'use strict';
 
-const APP_VERSION = '5.6.8';
+const APP_VERSION = '5.6.9';
 const CACHE_NAME = `vehicle-hub-${APP_VERSION}`;
 const scopeUrl = path => new URL(path, self.registration.scope).href;
 const APP_SHELL = [

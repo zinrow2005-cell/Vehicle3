@@ -24,7 +24,7 @@ if(!html.includes('autocapitalize="none"')||!html.includes('enterkeyhint="next"'
 if(!app.includes('function isCoarseTouchInput()')||!app.includes('if(!isCoarseTouchInput()) setTimeout(()=>form.querySelector'))fail('動態表單仍可能在iPhone/iPad自動focus造成鍵盤不彈');else pass('iPhone/iPad動態表單已取消程式自動focus');
 const styles=read('styles.css');if(!styles.includes('V5.6.6 iPhone/iPad all-form input hardening')||!styles.includes('font-size:16px!important')||!styles.includes('pointer-events:auto'))fail('iPhone/iPad全輸入框觸控保護缺失');else pass('iPhone/iPad全輸入框觸控與16px防縮放保護已建立');
 if(!styles.includes('physical iPad Safari/PWA native-input compatibility')||!styles.includes('html.ipad-native-input .login-gate{position:absolute'))fail('實體iPad非fixed登入相容模式缺失');else pass('實體iPad登入遮罩改為非fixed原生輸入模式');
-if(!html.includes('./auth-sync.js?v=5.6.8')||!html.includes('./styles.css?v=5.6.8')||!html.includes('./app.js?v=5.6.8'))fail('V5.6.7關鍵前端資源未做快取破除');else pass('V5.6.7關鍵前端資源已加入快取破除參數');
+if(!html.includes('./auth-sync.js?v=5.6.9')||!html.includes('./styles.css?v=5.6.9')||!html.includes('./app.js?v=5.6.9'))fail('V5.6.7關鍵前端資源未做快取破除');else pass('V5.6.7關鍵前端資源已加入快取破除參數');
 if(!sw.includes('await self.skipWaiting()')||!sw.includes('styles\\.css|app\\.js|auth-sync\\.js'))fail('Service Worker即時更新／關鍵資源network-first缺失');else pass('Service Worker自動啟用並對關鍵UI資源network-first');
 if(!app.includes("type==='number'?'inputmode=\"decimal\"'"))fail('動態數字欄未指定decimal鍵盤提示');else pass('動態數字欄已指定decimal鍵盤提示');
 if(/type="number"(?![^>]*inputmode=)/.test(html))fail('仍有靜態number欄位未指定inputmode');else pass('所有靜態number欄位均指定decimal鍵盤提示');
@@ -38,7 +38,7 @@ if(!app.includes('.wide-table table{font-size:6.7pt;table-layout:auto}')||!app.i
 if(!html.includes('A4 直式列印版面')||!html.includes('直向／Portrait'))fail('報表匯出頁未提示A4直式列印');else pass('報表匯出頁已明確提示A4直式');
 
 const data=JSON.parse(read('initial-complete-data.json'));
-if(data.schemaVersion!==59)fail('initial-complete-data schema不是59');else pass('完整資料schema為59');
+if(data.schemaVersion!==60)fail('initial-complete-data schema不是60');else pass('完整資料schema為59');
 const volvo=data.fuel.filter(x=>x.vehicleId==='v1'),lexus=data.fuel.filter(x=>x.vehicleId==='v2');
 const partial=volvo.find(x=>x.date==='2026-07-21');
 if(!partial||partial.fullTank!==false||partial.liters!==25.56||partial.amount!==800||!partial.userConfirmed)fail('VOLVO 2026/07/21部分加油資料錯誤');else pass('VOLVO 2026/07/21已確認部分加油');
@@ -78,4 +78,4 @@ const ac60=data.partInspections.find(x=>x.vehicleId==='v1'&&x.standardId==='ac-s
 if(ac60?.lastInspectDate!=='2026-08-10'||ac60?.condition!=='attention')fail('VOLVO 蒸發器待修狀態未建立');else pass('VOLVO 蒸發器滲漏已列待修注意');
 
 if(process.exitCode)process.exit(process.exitCode);
-console.log('V5.6.8所有靜態品質檢查通過。');
+console.log('V5.6.9所有靜態品質檢查通過。');

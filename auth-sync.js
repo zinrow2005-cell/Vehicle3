@@ -266,7 +266,7 @@
     try {
       persistCloudForm();
       $('#cloudConnectionStatus').textContent = '連線中';
-      const result = await cloudRequest({ action: 'ping', clientVersion: '5.6.8' });
+      const result = await cloudRequest({ action: 'ping', clientVersion: '5.6.9' });
       $('#cloudConnectionStatus').textContent = '連線正常';
       $('#cloudConnectionDetail').textContent = result.database || 'Vehicle Hub Google Sheet';
       addSyncLog(`連線成功：${result.message || 'Apps Script服務正常'}`);
@@ -283,7 +283,7 @@
       const username = currentSession?.username;
       const password = $('#cloudPassword').value;
       if (!username || !password) throw new Error('請輸入雲端密碼。');
-      const result = await cloudRequest({ action: 'login', username, password, clientVersion: '5.6.8' });
+      const result = await cloudRequest({ action: 'login', username, password, clientVersion: '5.6.9' });
       writeCloudToken({
         token: result.token,
         username,
@@ -326,7 +326,7 @@
   async function cloudPull() {
     try {
       const token = requireCloudToken();
-      const result = await cloudRequest({ action: 'pull', token: token.token, clientVersion: '5.6.8' });
+      const result = await cloudRequest({ action: 'pull', token: token.token, clientVersion: '5.6.9' });
       if (!result.data) throw new Error('雲端尚未建立資料；請先從有完整資料的裝置上傳。');
       const current = safeJsonParse(localStorage.getItem(DATA_STORAGE_KEY), null);
       if (current) createExternalSnapshot('Google Sheet下載前保護快照', current);
@@ -356,7 +356,7 @@
         return;
       }
       // 上傳前先讀雲端revision。登入只更新remoteRevision，絕不把舊裝置誤當成已同步。
-      const status = await cloudRequest({ action: 'status', token: token.token, clientVersion: '5.6.8' });
+      const status = await cloudRequest({ action: 'status', token: token.token, clientVersion: '5.6.9' });
       cloudSettings.remoteRevision = Number(status.revision || 0);
       saveCloudSettings();
       if (!force && cloudSettings.remoteRevision !== Number(cloudSettings.localBaseRevision || 0)) {
@@ -366,7 +366,7 @@
       const result = await cloudRequest({
         action: 'push', token: token.token, data: local.data,
         baseRevision: Number(cloudSettings.localBaseRevision || 0), force: !!force,
-        clientVersion: '5.6.8'
+        clientVersion: '5.6.9'
       });
       cloudSettings.remoteRevision = Number(result.revision || 0);
       cloudSettings.localBaseRevision = Number(result.revision || 0);
@@ -410,7 +410,7 @@
     const passwordInput = $('#loginPassword');
     prepareLoginFields();
 
-    // V5.6.8: do not intercept taps on the account/password fields.
+    // V5.6.9: do not intercept taps on the account/password fields.
     // Safari must receive the untouched native tap so it can open the iPad keyboard.
     applyIPadNativeInputMode();
 

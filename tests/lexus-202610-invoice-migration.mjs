@@ -37,14 +37,23 @@ console.log('PASS: 里程衝突時不覆蓋原本車輛里程');
 const start=app.indexOf('function odometerEntriesForValidation(');
 const end=app.indexOf('function calculateYearDistance(',start);
 assert(start>0&&end>start);
-const mockedState={fuel:[],maintenance:[structuredClone(invoice)],mileageLogs:[],vehicles:[{id:'v2',odometer:321782}]};
+const mockedState={
+ fuel:[{id:'fuel-sept7',vehicleId:'v2',date:'2026-09-07',odometer:321782}],
+ maintenance:[structuredClone(invoice)],mileageLogs:[],
+ vehicles:[{id:'v2',odometer:322082,odometerDate:'2026-10-15'}]
+};
 let confirms=0,errors=[];
-const helpers=new Function('state','hasPositiveNumber','vehicleById','today','num','toast','confirm',`${app.slice(start,end)}\nreturn {validateOdometerEntry,ensureOdometerEntryValid,maintenanceOdometerIssue};`)(mockedState,v=>v!=null&&Number(v)>0,id=>mockedState.vehicles.find(x=>x.id===id),()=> '2026-10-18',v=>Number(v).toLocaleString('zh-TW'),v=>errors.push(v),()=>{confirms++;return true;});
+const helpers=new Function('state','hasPositiveNumber','vehicleById','today','num','toast','confirm',`${app.slice(start,end)}\nreturn {validateOdometerEntry,ensureOdometerEntryValid,maintenanceOdometerIssue,odometerEntriesForValidation};`)(mockedState,v=>v!=null&&Number(v)>0,id=>mockedState.vehicles.find(x=>x.id===id),()=> '2026-10-18',v=>Number(v).toLocaleString('zh-TW'),v=>errors.push(v),()=>{confirms++;return true;});
 const result=helpers.validateOdometerEntry({vehicleId:'v2',date:'2026-10-15',odometer:322082,kind:'maintenance',id:invoice.id});
-assert(!result.ok);assert(result.message.includes('321,782'));
-assert.equal(helpers.maintenanceOdometerIssue(invoice),result.message);
+assert.equal(result.ok,true,'9/7加油里程較低，10/15里程增加300km屬正常');
+assert.equal(helpers.maintenanceOdometerIssue(invoice),'','無需虛假的里程待核對提示');
 assert.equal(helpers.ensureOdometerEntryValid({vehicleId:'v2',date:'2026-10-15',odometer:322082,kind:'maintenance',id:invoice.id}),true);
-assert.equal(confirms,1,'須有人工確認才可保留憑據衝突');
-assert.equal(helpers.ensureOdometerEntryValid({vehicleId:'v2',date:'2026-10-15',odometer:322082,kind:'fuel',id:'different'}),false,'非維修記錄維持嚴格阻擋');
-assert.equal(errors.length,1);
-console.log('PASS: 維修原單里程可經人工確認存檔、加油里程錯誤仍被擋下');
+assert.equal(confirms,0,'正常里程不得觸發人工異常確認');
+assert.equal(errors.length,0);
+assert.equal(helpers.odometerEntriesForValidation('v2').find(x=>x.kind==='vehicle')?.date,undefined,'已存在同日時序紀錄時避免重複主檔數值');
+assert.equal(helpers.validateOdometerEntry({vehicleId:'v2',date:'2026-09-01',odometer:322082,kind:'fuel',id:'new'}).ok,false,'早於9/7的虛假高里程仍阻擋');
+// A genuinely later, lower odometer must be flagged, not all conflicts ignored.
+mockedState.fuel.push({id:'real-later',vehicleId:'v2',date:'2026-10-18',odometer:321782});
+assert.equal(helpers.validateOdometerEntry({vehicleId:'v2',date:'2026-10-15',odometer:322082,kind:'maintenance',id:invoice.id}).ok,false);
+assert(helpers.maintenanceOdometerIssue(invoice).includes('2026-10-18'));
+console.log('PASS: 9/7 321782 km → 10/15 322082 km 屬正常；10/18若真的較低才警示');
