@@ -1,0 +1,51 @@
+Vehicle Hub｜Google Sheets＋Apps Script 部署說明
+
+用途
+- 兩個家庭帳號共用同一份家庭車輛資料。
+- Google Sheet保存資料與操作紀錄。
+- Apps Script負責帳號驗證、資料讀寫、版本衝突與鎖定。
+- GitHub Pages只負責介面，不直接取得Google Sheet編輯權限。
+
+一、建立Google Sheet
+1. 在Google雲端硬碟建立一份空白Google試算表。
+2. 建議命名：Vehicle Hub 車輛資料庫。
+3. 開啟「擴充功能 → Apps Script」。
+
+二、放入程式
+1. 將Code.gs完整貼入Apps Script編輯器。
+2. 將appsscript.json內容貼入專案資訊清單；若看不到資訊清單，先在專案設定啟用顯示appsscript.json。
+3. 儲存。
+
+三、初始化資料庫
+1. 在上方函式清單選擇 setupVehicleHubDatabase。
+2. 按「執行」。
+3. 第一次執行會要求Google授權，完成授權。
+4. 試算表會建立Users、SystemData、AuditLog、Vehicles、Fuel、Maintenance等分頁。
+5. 初始化後會建立兩個家庭帳號並共用 family 工作區；帳密不會顯示在系統畫面。
+
+四、部署Web App
+1. 點「部署 → 新增部署作業」。
+2. 類型選「網頁應用程式」。
+3. 執行身分選「我」。
+4. 存取權選「任何人」。
+5. 完成部署並複製結尾為 /exec 的網址。
+6. 回到Vehicle Hub → Google雲端同步，貼上網址並測試連線。
+
+五、首次資料上傳
+1. 請在保有完整資料的私人版本使用家庭帳號登入。
+2. 到 Google 雲端同步，輸入 Apps Script 網址及已設定的雲端密碼。
+3. 點「登入雲端資料庫」。
+4. 點「上傳目前資料」。
+5. 雲端版本顯示r1即代表完成。
+6. 其他手機或電腦登入後，點「從Google Sheet下載」。
+
+六、更換密碼（強烈建議）
+在Apps Script編輯器直接執行：
+setVehicleHubPassword('dad', '新的強密碼')
+setVehicleHubPassword('mom', '新的強密碼')
+
+注意
+- 正式使用前請設定強密碼，並避免在公開文件中揭露。
+- 不要把Apps Script的TOKEN_SECRET、試算表編輯權限或完整私人JSON放入公開GitHub。
+- 同步發生版本衝突時，先下載雲端資料檢查；只有確定本機較新時才使用強制覆蓋。
+- Apps Script與Google服務有使用配額，家庭兩人日常使用通常足夠，但仍應保留JSON備份。

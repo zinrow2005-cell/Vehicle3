@@ -1,5 +1,5 @@
 {
-  "schemaVersion": 58,
+  "schemaVersion": 59,
   "migrations": {
     "volvoFuelHistoryV52": true,
     "volvoMaintenanceV51": true,
@@ -8,7 +8,8 @@
     "v56ConfirmedFuelCycles": true,
     "v57CloudRevisionGuard": true,
     "v58FinalValidation": true,
-    "v563Volvo60kMaintenance": true
+    "v563Volvo60kMaintenance": true,
+    "v568LexusOct2026WorkOrder": true
   },
   "unclassifiedRecords": [
     {
@@ -820,7 +821,7 @@
       "engineCc": 3000,
       "fuelType": "95無鉛",
       "usage": "個人／家庭",
-      "odometer": 321334,
+      "odometer": 321782,
       "isDemo": false,
       "maintenanceMode": "不定期保養",
       "serviceKm": null,
@@ -4730,6 +4731,98 @@
           "amount": 4515
         }
       ]
+    },
+    {
+      "id": "lex-maint-20261015-AI151015004",
+      "vehicleId": "v2",
+      "date": "2026-10-15",
+      "invoiceDate": "2026-10-16",
+      "odometer": 322082,
+      "type": "故障維修",
+      "vendor": "權威汽車有限公司",
+      "workOrder": "AI151015004",
+      "items": "機油保養與檢修、前煞車來令片更換、起動馬達更換",
+      "parts": 11207,
+      "labor": 2000,
+      "discount": 246,
+      "total": 12961,
+      "nextKm": 327082,
+      "nextDate": "2027-04-13",
+      "warrantyDate": null,
+      "notes": "依2026/10/16權威汽車維修估價單登錄；單據進廠115/10/15、印表115/10/16，里程322,082 km。工資2,000元＋零件11,207元＝13,207元，手寫折讓246元，實際結算12,961元。包含機油4.5L、機油芯、放油螺絲墊片、噴油嘴清洗劑、空氣濾芯、前來令片與起動馬達。店家建議下次保養327,082 km／116/04/13。2026/10/18系統畫面顯示車輛最新里程321,782 km，比本工單少300 km；兩筆里程需重新核對，勿擅改原始單據。照片為遮蔽姓名、電話、住址、車牌及車身號碼之版本。",
+      "attachment": "attachments/LEXUS_ES300_2026-10-15_權威汽車工單_已遮蔽個資.jpg",
+      "details": [
+        {
+          "category": "工資",
+          "name": "保養及檢修工資",
+          "qty": 1,
+          "unitPrice": 600,
+          "amount": 600
+        },
+        {
+          "category": "工資",
+          "name": "前來令片更換工資",
+          "qty": 1,
+          "unitPrice": 600,
+          "amount": 600
+        },
+        {
+          "category": "工資",
+          "name": "起動馬達更換工資",
+          "qty": 1,
+          "unitPrice": 800,
+          "amount": 800
+        },
+        {
+          "category": "油品",
+          "name": "機油（0W/40）SHELL（單據註記9折）",
+          "qty": 4.5,
+          "unitPrice": 546,
+          "amount": 2457
+        },
+        {
+          "category": "零件",
+          "name": "油心（3.0）",
+          "qty": 1,
+          "unitPrice": 160,
+          "amount": 160
+        },
+        {
+          "category": "零件",
+          "name": "放油螺絲墊片",
+          "qty": 1,
+          "unitPrice": 40,
+          "amount": 40
+        },
+        {
+          "category": "用品",
+          "name": "噴油嘴清洗劑（標示$400）",
+          "qty": 1,
+          "unitPrice": 380,
+          "amount": 380
+        },
+        {
+          "category": "零件",
+          "name": "空氣心子",
+          "qty": 1,
+          "unitPrice": 320,
+          "amount": 320
+        },
+        {
+          "category": "零件",
+          "name": "前來令片（日）",
+          "qty": 1,
+          "unitPrice": 2250,
+          "amount": 2250
+        },
+        {
+          "category": "零件",
+          "name": "起動馬達（士電）",
+          "qty": 1,
+          "unitPrice": 5600,
+          "amount": 5600
+        }
+      ]
     }
   ],
   "reminders": [
@@ -5188,6 +5281,18 @@
       "notes": "依2026/08/10原廠預結算單記載：下次定保預計2027/07/21。",
       "sourceType": "maintenance",
       "sourceId": "volvo-maint-20260810-60k"
+    },
+    {
+      "id": "lex-reminder-20261015-next-maint",
+      "vehicleId": "v2",
+      "title": "2026/10/15 機油保養後下次回廠（327,082 km／2027/04/13）",
+      "category": "定期保養",
+      "targetKm": 327082,
+      "targetDate": "2027-04-13",
+      "status": "active",
+      "notes": "依權威汽車工單 AI151015004；里程時序待核對（2026/10/18螢幕值321,782 km，比10/15原單里程322,082 km低）。",
+      "sourceType": "maintenance",
+      "sourceId": "lex-maint-20261015-AI151015004"
     }
   ],
   "mileageLogs": [],

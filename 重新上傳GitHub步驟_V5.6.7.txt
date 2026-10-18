@@ -1,0 +1,14 @@
+車輛維修保養與油耗管理中心 V5.6.7｜重新上傳 GitHub 步驟
+
+1. 解壓縮 V5.6.7 ZIP。
+2. 將解壓後所有內容直接覆蓋 GitHub Repository 根目錄；index.html 必須直接位於根目錄。
+3. .github、attachments、Google_Sheets_Apps_Script、tests 都要一起上傳。
+4. Commit / Push 到 main，等待 GitHub Actions 全部綠色；本版會多跑「PDF portrait-layout regression」。
+5. 先用電腦開 GitHub Pages，確認登入頁版本顯示 V5.6.7。
+6. 進入「報表匯出與備份」，先測「維修廠查看清單 PDF」。列印視窗保持「直向／Portrait」，另存為 PDF。
+7. 開啟PDF後確認：頁面是A4直式，而且標題、表格、文字也是正常直向閱讀，不可再整頁橫倒90度。
+8. 再測「目前車輛完整報告」、「全部車輛總覽」、「完整資料列印存檔」三種PDF。
+9. iPhone／iPad若是主畫面PWA，先從多工完全關閉再重新開啟，讓V5.6.7 Service Worker更新。不要先清除Safari網站資料。
+10. 本版只修改前端PDF列印排版與快取版本；如果目前Google Apps Script同步正常，不需要只為PDF方向修正重新部署Code.gs。
+
+注意：V5.6.7所有PDF固定A4直式。列印對話框請保持直向，不要手動改橫向。

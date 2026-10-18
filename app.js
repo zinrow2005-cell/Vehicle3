@@ -1,8 +1,8 @@
 (() => {
   'use strict';
 
-  const SCHEMA_VERSION = 58;
-  const APP_VERSION = '5.6.7';
+  const SCHEMA_VERSION = 59;
+  const APP_VERSION = '5.6.8';
   const STORAGE_KEY = 'vehicleMaintenanceFuelV48';
   const LEGACY_STORAGE_KEYS = ['vehicleMaintenanceFuelV47','vehicleMaintenanceFuelV46','vehicleMaintenanceFuelV45','vehicleMaintenanceFuelV44','vehicleMaintenanceFuelV43','vehicleMaintenanceFuelV42','vehicleMaintenanceFuelV41','vehicleMaintenanceFuelV40','vehicleMaintenanceFuelV39','vehicleMaintenanceFuelV38','vehicleMaintenanceFuelV37','vehicleMaintenanceFuelV36','vehicleMaintenanceFuelV35','vehicleMaintenanceFuelV34','vehicleMaintenanceFuelV33','vehicleMaintenanceFuelV31','vehicleMaintenanceFuelV1','vehicleMaintenanceFuelV3'];
   const APPEARANCE_STORAGE_KEY = 'vehicleMaintenanceAppearanceV1';
@@ -2285,9 +2285,114 @@
     }
   ];
 
+  const LEXUS_202610_MAINTENANCE = {
+  "id": "lex-maint-20261015-AI151015004",
+  "vehicleId": "v2",
+  "date": "2026-10-15",
+  "invoiceDate": "2026-10-16",
+  "odometer": 322082,
+  "type": "故障維修",
+  "vendor": "權威汽車有限公司",
+  "workOrder": "AI151015004",
+  "items": "機油保養與檢修、前煞車來令片更換、起動馬達更換",
+  "parts": 11207,
+  "labor": 2000,
+  "discount": 246,
+  "total": 12961,
+  "nextKm": 327082,
+  "nextDate": "2027-04-13",
+  "warrantyDate": null,
+  "notes": "依2026/10/16權威汽車維修估價單登錄；單據進廠115/10/15、印表115/10/16，里程322,082 km。工資2,000元＋零件11,207元＝13,207元，手寫折讓246元，實際結算12,961元。包含機油4.5L、機油芯、放油螺絲墊片、噴油嘴清洗劑、空氣濾芯、前來令片與起動馬達。店家建議下次保養327,082 km／116/04/13。2026/10/18系統畫面顯示車輛最新里程321,782 km，比本工單少300 km；兩筆里程需重新核對，勿擅改原始單據。照片為遮蔽姓名、電話、住址、車牌及車身號碼之版本。",
+  "attachment": "attachments/LEXUS_ES300_2026-10-15_權威汽車工單_已遮蔽個資.jpg",
+  "details": [
+    {
+      "category": "工資",
+      "name": "保養及檢修工資",
+      "qty": 1,
+      "unitPrice": 600,
+      "amount": 600
+    },
+    {
+      "category": "工資",
+      "name": "前來令片更換工資",
+      "qty": 1,
+      "unitPrice": 600,
+      "amount": 600
+    },
+    {
+      "category": "工資",
+      "name": "起動馬達更換工資",
+      "qty": 1,
+      "unitPrice": 800,
+      "amount": 800
+    },
+    {
+      "category": "油品",
+      "name": "機油（0W/40）SHELL（單據註記9折）",
+      "qty": 4.5,
+      "unitPrice": 546,
+      "amount": 2457
+    },
+    {
+      "category": "零件",
+      "name": "油心（3.0）",
+      "qty": 1,
+      "unitPrice": 160,
+      "amount": 160
+    },
+    {
+      "category": "零件",
+      "name": "放油螺絲墊片",
+      "qty": 1,
+      "unitPrice": 40,
+      "amount": 40
+    },
+    {
+      "category": "用品",
+      "name": "噴油嘴清洗劑（標示$400）",
+      "qty": 1,
+      "unitPrice": 380,
+      "amount": 380
+    },
+    {
+      "category": "零件",
+      "name": "空氣心子",
+      "qty": 1,
+      "unitPrice": 320,
+      "amount": 320
+    },
+    {
+      "category": "零件",
+      "name": "前來令片（日）",
+      "qty": 1,
+      "unitPrice": 2250,
+      "amount": 2250
+    },
+    {
+      "category": "零件",
+      "name": "起動馬達（士電）",
+      "qty": 1,
+      "unitPrice": 5600,
+      "amount": 5600
+    }
+  ]
+};
+  const LEXUS_202610_REMINDER = {
+  "id": "lex-reminder-20261015-next-maint",
+  "vehicleId": "v2",
+  "title": "2026/10/15 機油保養後下次回廠（327,082 km／2027/04/13）",
+  "category": "定期保養",
+  "targetKm": 327082,
+  "targetDate": "2027-04-13",
+  "status": "active",
+  "notes": "依權威汽車工單 AI151015004；里程時序待核對（2026/10/18螢幕值321,782 km，比10/15原單里程322,082 km低）。",
+  "sourceType": "maintenance",
+  "sourceId": "lex-maint-20261015-AI151015004"
+};
+
   const seed = {
     schemaVersion: SCHEMA_VERSION,
-    migrations:{volvoFuelHistoryV52:false,volvoMaintenanceV51:false,volvoUserMaintenanceV52:false,v53QualityCorrections:false,v563Volvo60kMaintenance:false},
+    migrations:{volvoFuelHistoryV52:false,volvoMaintenanceV51:false,volvoUserMaintenanceV52:false,v53QualityCorrections:false,v563Volvo60kMaintenance:false,v568LexusOct2026WorkOrder:false},
     unclassifiedRecords:[{id:'unclassified-volvo-22310',vehicleId:'v1',type:'里程',value:'22310',date:'',status:'待確認',notes:'原始VOLVO加油清單中單獨出現，未附日期、油量與金額，暫不納入里程或油耗計算。'}],
     activeVehicleId: 'v2',
     maintenanceAgeProfiles: structuredClone(DEFAULT_MAINTENANCE_AGE_PROFILES),
@@ -2299,7 +2404,7 @@
         maintenanceMode:'定期保養', serviceKm:10000, serviceMonths:12, insuranceDate:'', inspectionDate:'', fuelTankCapacity:71, reserveLiters:7, benchmarkEfficiency:12.8, efficiencyReference:'依2020/11～2026/07已輸入加油紀錄之長期加權平均約12.8 km/L；油箱容量71L依Volvo官方XC60資料，可自行修改。', maintenanceBudgetLow:null, maintenanceBudgetHigh:null, majorRepairThreshold:null, maintenanceBudgetReference:'', maintenanceCostFactor:1, notes:'車型資料：XC60 B4 Momentum；初次領牌日2020/10/28。已輸入3萬、4萬、5萬公里保養及2020/11～2026/07加油紀錄。加油年份依原始順序回推；原始清單另有一筆未附日期與油量的里程22310，暫不納入計算。'
       },
       {
-        id:'v2', name:'LEXUS ES300', plate:'72**-GE', year:2003, manufactureDate:'2003-06', engineCc:3000, fuelType:'95無鉛', usage:'個人／家庭', odometer:321334, isDemo:false,
+        id:'v2', name:'LEXUS ES300', plate:'72**-GE', year:2003, manufactureDate:'2003-06', engineCc:3000, fuelType:'95無鉛', usage:'個人／家庭', odometer:321782, isDemo:false,
         maintenanceMode:'不定期保養', serviceKm:null, serviceMonths:null, insuranceDate:'2027-07-05', inspectionDate:'2026-12-09', fuelTankCapacity:70, reserveLiters:7, benchmarkEfficiency:8.9, efficiencyReference:'2003 LEXUS ES300 評估基準：油箱70L；比較油耗8.9km/L（可自行修改）', maintenanceBudgetLow:null, maintenanceBudgetHigh:null, majorRepairThreshold:null, maintenanceBudgetReference:'', maintenanceCostFactor:1, notes:'正式車輛資料；製造年月 2003/06。'
       }
     ],
@@ -2424,9 +2529,10 @@
           {category:'油品',name:'自動油（WS）6 AISIN／壺',qty:4,unitPrice:450,amount:1800},
           {category:'用品',name:'化清劑（福士）',qty:1,unitPrice:300,amount:300}
         ]
-      }
+      },
+      structuredClone(LEXUS_202610_MAINTENANCE)
     ],
-    reminders: [],
+    reminders: [structuredClone(LEXUS_202610_REMINDER)],
     mileageLogs: [],
     obligations: [
       {id:'lex-insurance-20270705',vehicleId:'v2',type:'保險',provider:'',periodStart:'',periodEnd:'',dueDate:'2027-07-05',amount:0,status:'待繳',paidDate:'',referenceNo:'',notes:'保險種類、保險公司與金額尚未提供',parentId:''},
@@ -2844,6 +2950,19 @@
     if(volvo)estimatedParts.forEach(row=>{let item=data.partInspections.find(x=>x.vehicleId===volvo.id&&x.standardId===row.standardId);if(item&&!item.lastReplaceOdometer){item.lastReplaceOdometer=row.odometer;item.lastReplaceOdometerEstimated=true;item.lastReplaceOdometerEstimateMethod=row.method;item.notes=[item.notes,`更換里程約 ${row.odometer.toLocaleString('zh-TW')} km（估算）：${row.method}`].filter(Boolean).join(' ');}});
   }
 
+  function applyV568LexusOct2026WorkOrder(data){
+    const target=(data.vehicles||[]).find(v=>v.id==='v2'||isLexusVehicleName(v.name));
+    if(!target)return;
+    const match=(data.maintenance||[]).find(m=>m.id===LEXUS_202610_MAINTENANCE.id||(m.vehicleId===target.id&&m.workOrder===LEXUS_202610_MAINTENANCE.workOrder));
+    // Never alter a user's already saved version of this repair.
+    const record=match||(structuredClone(LEXUS_202610_MAINTENANCE));
+    if(!match){record.vehicleId=target.id;data.maintenance.push(record);}
+    if(!data.reminders.some(r=>r.sourceType==='maintenance'&&r.sourceId===record.id)){
+      const r=structuredClone(LEXUS_202610_REMINDER);r.vehicleId=target.id;r.sourceId=record.id;data.reminders.push(r);
+    }
+    // Deliberately do not update target.odometer: the later master mileage conflicts with this invoice.
+  }
+
   function migrateData(input,{clearVehicleRecords=false}={}){
     const data = input && typeof input==='object' ? structuredClone(input) : structuredClone(seed);
     const sourceVersion=Number(data.schemaVersion)||0;
@@ -2920,6 +3039,7 @@
     if(!data.migrations.volvoUserMaintenanceV52){ensureVolvoUserMaintenance(data);data.migrations.volvoUserMaintenanceV52=true;}
     if(!data.migrations.v53QualityCorrections){applyV53FuelCorrections(data);data.migrations.v53QualityCorrections=true;}
     if(!data.migrations.v563Volvo60kMaintenance){ensureVolvo60KMaintenance(data);data.migrations.v563Volvo60kMaintenance=true;}
+    if(!data.migrations.v568LexusOct2026WorkOrder){applyV568LexusOct2026WorkOrder(data);data.migrations.v568LexusOct2026WorkOrder=true;}
     // V5.6.2：已確認的正式加油事實屬資料不變條件，每次載入都重新校正。
     // 不能只相信舊裝置的 migration 旗標，否則曾經留下 fullTank=null 的 iPhone/iPad 仍可能顯示資料不足。
     applyV56ConfirmedFuelCycles(data);
@@ -3030,9 +3150,9 @@
   }
   function odometerEntriesForValidation(vehicleId, exclude={}){
     const entries=[];
-    state.fuel.filter(x=>x.vehicleId===vehicleId).forEach(x=>entries.push({kind:'fuel',id:x.id,date:x.date,odometer:Number(x.odometer)||0,label:'加油紀錄'}));
+    state.fuel.filter(x=>x.vehicleId===vehicleId&&hasPositiveNumber(x.odometer)).forEach(x=>entries.push({kind:'fuel',id:x.id,date:x.date,odometer:Number(x.odometer),label:'加油紀錄'}));
     state.maintenance.filter(x=>x.vehicleId===vehicleId&&hasPositiveNumber(x.odometer)).forEach(x=>entries.push({kind:'maintenance',id:x.id,date:x.date,odometer:Number(x.odometer),label:'維修保養'}));
-    (state.mileageLogs||[]).filter(x=>x.vehicleId===vehicleId).forEach(x=>entries.push({kind:'mileage',id:x.id,date:x.date,odometer:Number(x.odometer)||0,label:x.source||'手動里程'}));
+    (state.mileageLogs||[]).filter(x=>x.vehicleId===vehicleId&&hasPositiveNumber(x.odometer)).forEach(x=>entries.push({kind:'mileage',id:x.id,date:x.date,odometer:Number(x.odometer),label:x.source||'手動里程'}));
     const vehicle=vehicleById(vehicleId);if(vehicle?.odometer)entries.push({kind:'vehicle',id:vehicleId,date:today(),odometer:Number(vehicle.odometer)||0,label:'目前車輛里程'});
     return entries.filter(x=>x.date&&!(x.kind===exclude.kind&&x.id===exclude.id));
   }
@@ -3048,10 +3168,22 @@
   }
   function ensureOdometerEntryValid(args){
     const result=validateOdometerEntry(args);
-    if(!result.ok){toast(result.message,'error');return false;}
+    if(!result.ok){
+      if(args.kind==='maintenance'){
+        // Workshop invoices are historical evidence. Allow entry only after explicit acknowledgement.
+        return confirm(`${result.message}\n\n維修單仍可登錄，但會標示「里程待核對」，不會修改車輛主檔最新里程。請核對兩筆原始里程後再修正。\n\n確定保留工單原始里程並儲存嗎？`);
+      }
+      toast(result.message,'error');return false;
+    }
     if(result.warning&&!confirm(result.warning))return false;
     return true;
   }
+  function maintenanceOdometerIssue(order){
+    if(!hasPositiveNumber(order.odometer))return '';
+    const result=validateOdometerEntry({vehicleId:order.vehicleId,date:order.date,odometer:order.odometer,kind:'maintenance',id:order.id});
+    return result.ok?'':result.message;
+  }
+
 
   function calculateYearDistance(vehicleId, year=today().slice(0,4)){
     const points=mileagePointsForVehicle(vehicleId).filter(p=>p.date.startsWith(year));
@@ -4012,7 +4144,7 @@
   function renderMaintenance(){
     const kw=$('#maintenanceKeyword')?.value.trim().toLowerCase()||''; const type=$('#maintenanceTypeFilter')?.value||''; const start=$('#maintenanceStart')?.value||''; const end=$('#maintenanceEnd')?.value||'';
     const rows=vm().filter(x=>(!kw||`${x.workOrder||''} ${x.items} ${x.vendor} ${x.notes}`.toLowerCase().includes(kw))&&(!type||x.type===type)&&(!start||x.date>=start)&&(!end||x.date<=end));
-    $('#maintenanceTableBody').innerHTML=rows.map(x=>`<tr><td>${x.date}</td><td>${maintenanceOdometerText(x.odometer)}</td><td><span class="badge blue">${esc(x.type)}</span></td><td>${esc(x.vendor||'-')}</td><td>${esc(x.items)}</td><td>${money(x.total)}</td><td>${x.nextKm?`${num(x.nextKm)} km`:x.nextDate||'-'}</td><td>${x.details?.length?`<button class="action-btn" data-view-maint="${x.id}">明細</button>`:''}<button class="action-btn" data-edit-maint="${x.id}">編輯</button><button class="action-btn danger" data-del-maint="${x.id}">刪除</button></td></tr>`).join('')||`<tr><td colspan="8" class="empty">沒有符合條件的紀錄</td></tr>`;
+    $('#maintenanceTableBody').innerHTML=rows.map(x=>`<tr><td>${x.date}</td><td>${maintenanceOdometerText(x.odometer)}${maintenanceOdometerIssue(x)?`<div class="odometer-review-note" title="${esc(maintenanceOdometerIssue(x))}">⚠ 里程待核對</div>`:''}</td><td><span class="badge blue">${esc(x.type)}</span></td><td>${esc(x.vendor||'-')}</td><td>${esc(x.items)}</td><td>${money(x.total)}</td><td>${x.nextKm?`${num(x.nextKm)} km`:x.nextDate||'-'}</td><td>${x.details?.length?`<button class="action-btn" data-view-maint="${x.id}">明細</button>`:''}<button class="action-btn" data-edit-maint="${x.id}">編輯</button><button class="action-btn danger" data-del-maint="${x.id}">刪除</button></td></tr>`).join('')||`<tr><td colspan="8" class="empty">沒有符合條件的紀錄</td></tr>`;
   }
 
   function renderMaintenanceEvaluation(){
@@ -4317,7 +4449,7 @@
     const row=id?state.maintenance.find(x=>x.id===id):null;
     openModal({eyebrow:'維修保養工單',title:row?'編輯維修保養工單':'新增維修保養工單',submitText:'儲存工單',fields:[
       ['date','進廠日期','date',row?.date||today(),true],['odometer','當時里程','number',row?.odometer??activeVehicle().odometer,true],['type','工單類型','select',row?.type||'定期保養',true,['定期保養','故障維修','輪胎','鈑金烤漆','事故維修','其他']],['vendor','維修廠／保養廠','text',row?.vendor??'',false],['items','維修保養項目','textarea',row?.items??'',true],['parts','零件金額','number',row?.parts??0,false],['labor','工資','number',row?.labor??0,false],['discount','折扣','number',row?.discount??0,false],['total','本次總金額','number',row?.total??'',false],['nextKm','下次更換里程','number',row?.nextKm??'',false],['nextDate','下次更換日期','date',row?.nextDate??'',false],['warrantyDate','保固期限','date',row?.warrantyDate??'',false],['notes','備註','textarea',row?.notes??'',false]
-    ],onSubmit:data=>{const total=+data.total||Math.max(0,(+data.parts||0)+(+data.labor||0)-(+data.discount||0));const item={id:row?.id||uid(),vehicleId:state.activeVehicleId,date:data.date,invoiceDate:row?.invoiceDate||'',odometer:nullableNumber(data.odometer),type:data.type,vendor:data.vendor,workOrder:row?.workOrder||'',items:data.items,parts:+data.parts||0,labor:+data.labor||0,discount:+data.discount||0,total,nextKm:data.nextKm?+data.nextKm:null,nextDate:data.nextDate||null,warrantyDate:data.warrantyDate||null,notes:data.notes,attachment:row?.attachment||'',details:row?.details||[],dateYearInferred:!!row?.dateYearInferred};if(hasPositiveNumber(item.odometer)&&!ensureOdometerEntryValid({vehicleId:item.vehicleId,date:item.date,odometer:item.odometer,kind:'maintenance',id:item.id}))return;upsert(state.maintenance,item);if(hasPositiveNumber(item.odometer))activeVehicle().odometer=Math.max(activeVehicle().odometer,item.odometer);let reminder=state.reminders.find(r=>r.sourceType==='maintenance'&&r.sourceId===item.id);if(item.nextKm||item.nextDate){if(!reminder){reminder={id:uid(),vehicleId:state.activeVehicleId};state.reminders.push(reminder);}Object.assign(reminder,{title:item.items,category:item.type,targetKm:item.nextKm,targetDate:item.nextDate,status:'active',notes:'由維修工單自動建立',sourceType:'maintenance',sourceId:item.id});}else if(reminder){reminder.status='done';}closeModal();renderAll();toast('維修保養工單已儲存');}});
+    ],onSubmit:data=>{const total=+data.total||Math.max(0,(+data.parts||0)+(+data.labor||0)-(+data.discount||0));const item={id:row?.id||uid(),vehicleId:state.activeVehicleId,date:data.date,invoiceDate:row?.invoiceDate||'',odometer:nullableNumber(data.odometer),type:data.type,vendor:data.vendor,workOrder:row?.workOrder||'',items:data.items,parts:+data.parts||0,labor:+data.labor||0,discount:+data.discount||0,total,nextKm:data.nextKm?+data.nextKm:null,nextDate:data.nextDate||null,warrantyDate:data.warrantyDate||null,notes:data.notes,attachment:row?.attachment||'',details:row?.details||[],dateYearInferred:!!row?.dateYearInferred};if(hasPositiveNumber(item.odometer)&&!ensureOdometerEntryValid({vehicleId:item.vehicleId,date:item.date,odometer:item.odometer,kind:'maintenance',id:item.id}))return;upsert(state.maintenance,item);if(hasPositiveNumber(item.odometer)&&item.date>=today())activeVehicle().odometer=Math.max(Number(activeVehicle().odometer)||0,item.odometer);let reminder=state.reminders.find(r=>r.sourceType==='maintenance'&&r.sourceId===item.id);if(item.nextKm||item.nextDate){if(!reminder){reminder={id:uid(),vehicleId:state.activeVehicleId};state.reminders.push(reminder);}Object.assign(reminder,{title:item.items,category:item.type,targetKm:item.nextKm,targetDate:item.nextDate,status:'active',notes:'由維修工單自動建立',sourceType:'maintenance',sourceId:item.id});}else if(reminder){reminder.status='done';}closeModal();renderAll();toast('維修保養工單已儲存');}});
   }
   function openMaintenanceDetail(id){
     const row=state.maintenance.find(x=>x.id===id);if(!row)return;
@@ -4326,7 +4458,7 @@
     const form=$('#modalForm');
     const details=Array.isArray(row.details)?row.details:[];
     const detailRows=details.map((d,i)=>`<tr><td>${i+1}</td><td><span class="badge blue">${esc(d.category||'項目')}</span></td><td>${esc(d.name||'')}</td><td>${num(d.qty??1,Number.isInteger(Number(d.qty))?0:1)}</td><td>${money(d.unitPrice||0)}</td><td>${money(d.amount||0)}</td><td>${esc(d.note||'')}</td></tr>`).join('');
-    form.innerHTML=`<div class="maintenance-detail full"><div class="maintenance-detail-meta"><span><b>工單編號</b>${esc(row.workOrder||'未提供')}</span><span><b>進廠日期</b>${esc(row.date)}</span><span><b>印表日期</b>${esc(row.invoiceDate||'未提供')}</span><span><b>當時里程</b>${maintenanceOdometerText(row.odometer)}</span></div><div class="table-scroll"><table class="data-table maintenance-detail-table"><thead><tr><th>#</th><th>分類</th><th>項目</th><th>數量</th><th>單價</th><th>金額</th><th>說明</th></tr></thead><tbody>${detailRows||'<tr><td colspan="7" class="empty">沒有逐項明細</td></tr>'}</tbody></table></div><div class="maintenance-detail-total"><span>零件／用品 ${money(row.parts)}</span><span>工資 ${money(row.labor)}</span><strong>合計 ${money(row.total)}</strong></div>${row.notes?`<div class="maintenance-detail-note">${esc(row.notes)}</div>`:''}${row.attachment?`<a class="btn btn-secondary attachment-link" href="${encodeURI(row.attachment)}" target="_blank" rel="noopener">開啟原始單據</a>`:''}</div><div class="modal-actions"><button type="button" class="btn btn-secondary close-modal">關閉</button></div>`;
+    form.innerHTML=`<div class="maintenance-detail full"><div class="maintenance-detail-meta"><span><b>工單編號</b>${esc(row.workOrder||'未提供')}</span><span><b>進廠日期</b>${esc(row.date)}</span><span><b>印表日期</b>${esc(row.invoiceDate||'未提供')}</span><span><b>當時里程</b>${maintenanceOdometerText(row.odometer)}</span></div>${maintenanceOdometerIssue(row)?`<div class="odometer-review-banner">⚠ ${esc(maintenanceOdometerIssue(row))}。這張工單已保留原始數字，請核對後續里程紀錄。</div>`:''}<div class="table-scroll"><table class="data-table maintenance-detail-table"><thead><tr><th>#</th><th>分類</th><th>項目</th><th>數量</th><th>單價</th><th>金額</th><th>說明</th></tr></thead><tbody>${detailRows||'<tr><td colspan="7" class="empty">沒有逐項明細</td></tr>'}</tbody></table></div><div class="maintenance-detail-total"><span>零件／用品 ${money(row.parts)}</span><span>工資 ${money(row.labor)}</span><strong>合計 ${money(row.total)}</strong></div>${row.notes?`<div class="maintenance-detail-note">${esc(row.notes)}</div>`:''}${row.attachment?`<a class="btn btn-secondary attachment-link" href="${encodeURI(row.attachment)}" target="_blank" rel="noopener">開啟原始單據</a>`:''}</div><div class="modal-actions"><button type="button" class="btn btn-secondary close-modal">關閉</button></div>`;
     form.onsubmit=e=>e.preventDefault();$('#modalBackdrop').hidden=false;
   }
 
@@ -4681,7 +4813,7 @@
   $('#exportObligationCsv').onclick=()=>{const v=activeVehicle();const rows=[['類型','承辦單位／保險公司','期間起日','期間迄日','到期／應繳日','金額','繳納日','狀態','保單／單號','備註'],...vo().map(x=>[x.type,x.provider,x.periodStart,x.periodEnd,x.dueDate,x.amount,x.paidDate,x.estimatedPaid?'推定已繳':x.status,x.referenceNo,x.notes])];download(`稅金保險驗車_${v.name}_${today()}.csv`,csv(rows),'text/csv;charset=utf-8');};
   $('#exportJson').onclick=()=>{state.lastBackupAt=new Date().toISOString();save();renderAutomation();download(`車輛管理完整備份_${today()}.json`,JSON.stringify(state,null,2),'application/json');};
   $('#importJson').onchange=async e=>{const file=e.target.files[0];if(!file)return;try{const obj=JSON.parse(await file.text());if(!obj.vehicles)throw new Error('格式錯誤');createLocalSnapshot('匯入JSON前保護快照');state=migrateData(obj);renderAll();toast(`備份資料已匯入並升級至 V${SCHEMA_VERSION}`);}catch(err){toast('無法匯入：檔案格式不正確','error');}e.target.value='';};
-  $('#resetDemo').onclick=()=>{if(confirm('將清除所有加油、維修、提醒、稅費與里程紀錄，但保留目前兩台車的車輛主檔資料，確定繼續？')){createLocalSnapshot('清空所有紀錄前保護快照');state=migrateData({schemaVersion:SCHEMA_VERSION,migrations:{volvoFuelHistoryV52:true,volvoMaintenanceV51:true,volvoUserMaintenanceV52:true,v53QualityCorrections:true,v56ConfirmedFuelCycles:true,v57CloudRevisionGuard:true,v58FinalValidation:true,v563Volvo60kMaintenance:true},activeVehicleId:state.activeVehicleId,vehicles:structuredClone(state.vehicles),fuel:[],maintenance:[],reminders:[],mileageLogs:[],obligations:[],partInspections:[],unclassifiedRecords:[],partStandards:structuredClone(state.partStandards),maintenanceAgeProfiles:structuredClone(state.maintenanceAgeProfiles),automationSettings:structuredClone(state.automationSettings),automationLog:structuredClone(state.automationLog||[]),notificationHistory:structuredClone(state.notificationHistory||{}),lastBackupAt:state.lastBackupAt||'',fuelAnalysisMode:state.fuelAnalysisMode||'all'});renderAll();toast('已清空所有紀錄，車輛主檔已保留；內建資料不會再次自動補回');}};
+  $('#resetDemo').onclick=()=>{if(confirm('將清除所有加油、維修、提醒、稅費與里程紀錄，但保留目前兩台車的車輛主檔資料，確定繼續？')){createLocalSnapshot('清空所有紀錄前保護快照');state=migrateData({schemaVersion:SCHEMA_VERSION,migrations:{volvoFuelHistoryV52:true,volvoMaintenanceV51:true,volvoUserMaintenanceV52:true,v53QualityCorrections:true,v56ConfirmedFuelCycles:true,v57CloudRevisionGuard:true,v58FinalValidation:true,v563Volvo60kMaintenance:true,v568LexusOct2026WorkOrder:true},activeVehicleId:state.activeVehicleId,vehicles:structuredClone(state.vehicles),fuel:[],maintenance:[],reminders:[],mileageLogs:[],obligations:[],partInspections:[],unclassifiedRecords:[],partStandards:structuredClone(state.partStandards),maintenanceAgeProfiles:structuredClone(state.maintenanceAgeProfiles),automationSettings:structuredClone(state.automationSettings),automationLog:structuredClone(state.automationLog||[]),notificationHistory:structuredClone(state.notificationHistory||{}),lastBackupAt:state.lastBackupAt||'',fuelAnalysisMode:state.fuelAnalysisMode||'all'});renderAll();toast('已清空所有紀錄，車輛主檔已保留；內建資料不會再次自動補回');}};
   $('#globalSearch').addEventListener('input',e=>{clearTimeout(searchTimer);searchTimer=setTimeout(()=>renderSearchResults(e.target.value),300);});
   $('#globalSearch').addEventListener('focus',e=>{if(e.target.value.trim())renderSearchResults(e.target.value);});
 

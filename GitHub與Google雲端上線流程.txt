@@ -1,0 +1,25 @@
+Vehicle Hub V5.4｜建議上線流程
+
+A. 先建立雲端資料庫
+1. 建立空白Google Sheet。
+2. 依Google_Sheets_Apps_Script/部署說明.txt建立Apps Script Web App。
+3. 執行 setupVehicleHubDatabase，建立家庭帳號與資料表。
+
+B. 將目前正式資料上傳
+1. 開啟「V5.4私人資料保留同步版」。
+2. 使用已設定的家庭帳號與密碼登入。
+3. 開啟Google雲端同步，貼上Apps Script /exec網址。
+4. 登入雲端資料庫並點「上傳目前資料」。
+5. 確認雲端版本出現r1。
+
+C. 再上傳GitHub
+1. 解壓縮「V5.4 GitHub雲端安全版」。
+2. 將資料夾內所有檔案上傳到Repository根目錄。
+3. Settings → Pages → Source選GitHub Actions。
+4. 開啟GitHub Pages網站，使用已設定的家庭帳號登入。
+5. 到Google雲端同步，貼上相同Apps Script網址並從Google Sheet下載。
+
+安全提醒
+- 本機登入頁面只是介面入口；公開GitHub的JavaScript原始碼任何人都可查看。
+- 因此GitHub版不應內建私人資料，正式資料應保存於Google Sheet後端。
+- 雲端首次成功後，建議立即在 Apps Script 設定強密碼。

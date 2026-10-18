@@ -1,0 +1,23 @@
+車輛維修保養與油耗管理中心 V5.6.7｜GitHub完整資料部署版
+
+本包已包含：
+・VOLVO XC60與LEXUS ES300車輛資料
+・全部加油、維修、稅費、驗車、提醒與零件評估紀錄
+・VOLVO 3萬／4萬／5萬公里原始維修單
+・LEXUS歷史維修單照片與Numbers原始檔
+・dad／mom登入功能，登入畫面不顯示帳密提示
+・Google Sheets＋Apps Script同步模板
+・GitHub Actions品質檢查與Pages部署流程
+・initial-complete-data.json完整初始資料備份
+
+重要隱私提醒：
+此版本含私人車輛資料與原始單據。前端登入頁面不能加密GitHub儲存庫內的靜態檔案；請將Repository設為Private。若設為Public，外部使用者可能直接讀取app.js、JSON及attachments資料夾。
+
+上傳方式：
+1. 解壓縮ZIP。
+2. 將解壓後的全部檔案與資料夾上傳至Repository根目錄。
+3. 必須包含.github、attachments、Google_Sheets_Apps_Script、tests等資料夾。
+4. GitHub進入Settings → Pages，Source選擇GitHub Actions。
+5. 推送至main後，Actions會先檢查再部署。
+
+初次在新裝置開啟時，會載入包內的完整初始資料；之後修改先保存在該瀏覽器。Google Sheets Apps Script部署完成後，再啟用跨裝置同步。

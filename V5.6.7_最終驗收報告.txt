@@ -1,0 +1,40 @@
+車輛維修保養與油耗管理中心 V5.6.7｜A4直式PDF方向修正驗收報告
+驗收日期：2026-08-31
+
+一、使用者回報
+- PDF檔案頁面本身為直式，但報表內容整頁橫向／旋轉90度。
+- 截圖顯示「維修廠查看清單」標題、卡片、表格全部側倒。
+
+二、根因
+- V5.6.6 reportCss 預設 orientation=landscape。
+- 維修廠查看清單又明確傳入 orientation:'landscape'。
+- 使用者列印／另存PDF時若維持直向頁面，瀏覽器／PDF列印流程可能把已按橫式排版的內容旋轉後塞入直式紙張。
+
+三、V5.6.7修正
+1. reportCss固定 @page size:210mm 297mm。
+2. openPrintReport移除orientation參數，所有PDF共用單一A4直式路徑。
+3. 移除維修廠查看清單landscape呼叫。
+4. body與.report加入transform:none／rotate:none防旋轉。
+5. 7欄維修廠表改為直式可換行排版。
+6. 8欄以上wide-table縮至6.7pt並允許欄位換行，避免直式裁切。
+7. 報表匯出頁增加「A4直式／Portrait」提示。
+8. GitHub Actions新增tests/pdf-portrait-layout.mjs回歸測試。
+
+四、實際PDF渲染驗收
+- 維修廠清單測試：A4 595.276×841.89 pt，Page rotation=0°。
+- 7欄重點檢查表：內容正常直向、文字可換行、無整頁旋轉。
+- 全車總覽／維修紀錄10欄寬表：A4直式內完整顯示、無橫向裁切。
+- PDF視覺渲染已檢視，標題、摘要卡、表格均為正常直向閱讀。
+
+五、既有功能回歸
+- app.js／auth-sync.js／sw.js／Apps Script語法：通過。
+- 254個HTML ID唯一：通過。
+- iPad原生登入輸入回歸：通過。
+- iPhone／iPad全輸入框保護：通過。
+- LEXUS 21筆加油、16個有效油耗週期、8.01 km/L／3.93元/km：通過。
+- VOLVO 2026/07/21部分加油：通過。
+- VOLVO 2026/08/10 63,343km／33,453元原廠工單及附件：通過。
+- Google雲端remoteRevision/localBaseRevision衝突保護：通過。
+- V57→V58 migration、LEXUS舊裝置修復、VOLVO 60K舊裝置修復：通過。
+
+結論：V5.6.7可作為GitHub重新部署版本。PDF方向問題已從排版根因修正，不是依靠PDF閱讀器手動旋轉。

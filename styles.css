@@ -1056,3 +1056,7 @@ html.ipad-native-input .login-form input,
 html.ipad-native-input #cloudPassword,
 html.ipad-native-input #appsScriptUrl{position:relative;z-index:5;min-height:50px;font-size:17px!important;pointer-events:auto!important;touch-action:manipulation!important;-webkit-user-select:text!important;user-select:text!important;-webkit-touch-callout:default!important;cursor:text;opacity:1}
 html.ipad-native-input .login-gate:before{pointer-events:none!important}
+
+/* V5.6.8: invoice mileage discrepancy is visible but does not block historical entry. */
+.odometer-review-note{margin-top:5px;color:#f3ba58;font-size:12px;font-weight:700;line-height:1.3;white-space:nowrap}
+.odometer-review-banner{border-radius:10px;background:rgba(246,184,77,.1);border:1px solid rgba(246,184,77,.55);color:inherit;padding:12px 14px;margin:8px 0 14px;font-size:14px;line-height:1.6}
