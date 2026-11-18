@@ -1,5 +1,5 @@
 const STORAGE_KEY = 'vehiclehub_lite_v580';
-const APP_VERSION = 'V5.8.4';
+const APP_VERSION = 'V5.8.6';
 let state = null;
 const SNAPSHOT_KEY=STORAGE_KEY+'_previous';
 let lastMergeReport=null, editDetails=[], editAttachments=[], fileBusy=false, editorEpoch=0, detailsDirty=false;
@@ -31,7 +31,7 @@ async function loadInitialData() {
   }
   state=blankData(); persist(false);
 }
-function blankData(){return {version:'5.8.4',appName:'Vehicle Hub Lite',settings:{lastVehicleId:'local-default'},vehicles:[{id:'local-default',name:'我的車輛',fuelType:'',odometer:0}],fuel:[],maintenance:[],meta:{}};}
+function blankData(){return {version:'5.8.6',appName:'Vehicle Hub Lite',settings:{lastVehicleId:'local-default'},vehicles:[{id:'local-default',name:'我的車輛',fuelType:'',odometer:0}],fuel:[],maintenance:[],meta:{}};}
 
 function persist(snapshot=true) {
   state.meta=state.meta||{};state.meta.savedAt=new Date().toISOString();
@@ -64,7 +64,7 @@ function normalizeImportedData(data) {
   }
   // 保留紀錄欄位（包括維修明細及估算旗標），不保留已移除的模組。
   const selected=data.settings?.lastVehicleId||data.activeVehicleId;
-  const result={version:'5.8.4',appName:'Vehicle Hub Lite',settings:{lastVehicleId:ids.has(selected)?selected:out.vehicles[0].id},vehicles:out.vehicles,fuel:out.fuel,maintenance:out.maintenance,meta:out.meta||{},trash:Array.isArray(out.trash)?out.trash.filter(x=>x&&['fuel','maintenance'].includes(x.key)&&x.record&&ids.has(x.record.vehicleId)&&typeof x.record.id==='string'&&/^\d{4}-\d{2}-\d{2}$/.test(x.record.date||'')):[],tombstones:Array.isArray(out.tombstones)?out.tombstones.filter(x=>x&&['fuel','maintenance'].includes(x.key)&&typeof x.id==='string'):[]};
+  const result={version:'5.8.6',appName:'Vehicle Hub Lite',settings:{lastVehicleId:ids.has(selected)?selected:out.vehicles[0].id},vehicles:out.vehicles,fuel:out.fuel,maintenance:out.maintenance,meta:out.meta||{},trash:Array.isArray(out.trash)?out.trash.filter(x=>x&&['fuel','maintenance'].includes(x.key)&&x.record&&ids.has(x.record.vehicleId)&&typeof x.record.id==='string'&&/^\d{4}-\d{2}-\d{2}$/.test(x.record.date||'')):[],tombstones:Array.isArray(out.tombstones)?out.tombstones.filter(x=>x&&['fuel','maintenance'].includes(x.key)&&typeof x.id==='string'):[]};
   refreshVehicleOdometers(result);return result;
 }
 
