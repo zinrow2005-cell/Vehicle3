@@ -3,17 +3,17 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <title>Vehicle Hub Lite V5.8.8</title>
+  <title>Vehicle Hub Lite V5.9.0</title>
   <meta name="theme-color" content="#f6f8fb" />
   <link rel="manifest" href="manifest.webmanifest" />
   <link rel="icon" href="icon-192.png" />
-  <link rel="stylesheet" href="styles.css?v=588" />
+  <link rel="stylesheet" href="styles.css?v=590" />
 </head>
 <body>
   <div class="app-shell">
     <header class="topbar">
       <div>
-        <p class="eyebrow">VEHICLE HUB · LITE 5.8.8</p>
+        <p class="eyebrow">VEHICLE HUB · LITE 5.9.0</p>
         <h1>我的車輛紀錄</h1>
         <p class="subtext">加油・維修・油耗</p>
       </div>
@@ -97,7 +97,7 @@
       </section>
 
       <section class="tab-panel" id="panel-maintenance">
-        <div class="record-toolbar"><button class="primary" id="maintenanceNewBtn">＋ 新增維修</button><input type="search" id="maintenanceSearch" name="vh-maintenance-record-filter" placeholder="搜尋維修紀錄" aria-label="搜尋維修紀錄" autocomplete="off" autocapitalize="none" spellcheck="false" data-lpignore="true" data-1p-ignore><select id="maintenanceYear" aria-label="年份篩選"></select></div>
+        <div class="record-toolbar"><div class="maintenance-add-actions"><button class="primary" id="maintenanceNewBtn">＋ 新增維修</button><button class="secondary ocr-launch" id="ocrNewBtn" type="button">📷 影像辨識</button></div><input type="search" id="maintenanceSearch" name="vh-maintenance-record-filter" placeholder="搜尋維修紀錄" aria-label="搜尋維修紀錄" autocomplete="off" autocapitalize="none" spellcheck="false" data-lpignore="true" data-1p-ignore><select id="maintenanceYear" aria-label="年份篩選"></select></div>
         <div class="panel editor" id="maintenanceEditor" hidden>
           <div class="panel-head">
             <h2 id="maintenanceFormTitle">新增維修紀錄</h2>
@@ -105,6 +105,18 @@
           <div class="editor-vehicle" id="maintenanceVehicleLabel"></div>
           <form id="maintenanceForm" class="form-grid">
             <input type="hidden" id="maintenanceId" />
+            <details class="full-row ocr-panel" id="ocrPanel">
+              <summary>📷 工單影像辨識匯入</summary>
+              <p class="help-text">拍照或選照片／PDF → 辨識 → 核對候選 → 套入表單 → 確認儲存。不會自動建檔。</p>
+              <div class="ocr-actions"><label class="primary file-label">拍攝工單<input id="ocrCamera" type="file" accept="image/*" capture="environment" hidden></label><label class="secondary file-label">選取照片 / PDF<input id="ocrFile" type="file" accept="image/jpeg,image/png,image/webp,image/gif,application/pdf,.pdf" hidden></label></div>
+              <div id="ocrFileName" class="help-text">尚未選取</div><div class="ocr-image-frame"><img id="ocrPreview" alt="工單照片預覽" hidden></div>
+              <div class="ocr-actions"><button id="ocrRotate" type="button" class="secondary" disabled>旋轉 90°</button><label class="ocr-check-label"><input type="checkbox" id="ocrContrast">加強對比</label></div>
+              <div class="ocr-actions"><button id="ocrRun" type="button" class="primary">開始文字辨識</button><button id="ocrAI" type="button" class="secondary">AI 進階辨識</button><button id="ocrAttachOnly" type="button" class="secondary">只加入原始附件</button></div>
+              <p class="help-text">文字辨識使用 Google Drive OCR（須更新 Apps Script 並啟用 Drive API）。AI 進階模式須另設定 Gemini API 金鑰，可能收費；工單含個資，建議使用適當付費隱私方案。預設不會傳送至 Gemini。每次辨識一份文件，原始附件上限 15 MB，PDF 辨識上限 10 MB。</p>
+              <p id="ocrStatus" class="inline-note" role="status" aria-live="polite">上傳工單後按辨識，或貼上文字直接整理。</p>
+              <details class="ocr-text-block"><summary>辨識文字 / 貼上 ChatGPT 整理結果</summary><label><span>可修正辨識文字，或貼上其他工具整理的文字</span><textarea id="ocrText" rows="9" autocomplete="off" placeholder="進廠日期：…&#10;維修廠：…&#10;實付金額：…&#10;零件 | 項目名稱 | 數量 | 單價 | 小計"></textarea></label><div class="ocr-actions"><button id="ocrParse" class="secondary" type="button">重新整理欄位</button><button id="ocrCopyTemplate" class="secondary" type="button">複製 ChatGPT 整理指令</button></div><textarea id="ocrTemplate" rows="7" readonly hidden aria-label="可複製的整理指令"></textarea><details><summary>檢視原始辨識文字</summary><textarea id="ocrRaw" rows="7" readonly aria-label="原始辨識文字"></textarea></details></details>
+              <section id="ocrResults" hidden><h3>辨識結果 · 待核對</h3><p id="ocrIdentity" class="ocr-identity"></p><div id="ocrCandidates" class="ocr-candidates"></div><h4 id="ocrDetailCount"></h4><div class="ocr-details" id="ocrDetailPreview"></div><ul id="ocrWarnings" class="ocr-warnings"></ul><button id="ocrConfirm" class="primary" type="button" disabled>確認車輛並套入表單</button></section>
+            </details>
             <label><span>進廠日期</span><input type="date" id="maintenanceDate" required /></label>
             <label><span>開單日期</span><input type="date" id="maintenanceInvoiceDate" /></label>
             <label><span>里程 (km，可留空)</span><input type="number" id="maintenanceOdometer" min="1" step="1" /></label>
@@ -128,7 +140,8 @@
             <label><span>下次里程</span><input type="number" id="maintenanceNextKm" min="0" step="1" /></label>
             <label><span>下次日期</span><input type="date" id="maintenanceNextDate" /></label>
             <label class="full-row"><span>備註</span><textarea id="maintenanceNotes" rows="3"></textarea></label>
-            <div class="full-row detail-editor"><h3>工單附件（僅存本機）</h3><p class="help-text">照片或 PDF；單檔上限 15 MB。備份會包含已存附件。</p><label class="secondary file-label">選取附件<input type="file" id="maintenanceFiles" accept="image/jpeg,image/png,image/webp,image/gif,application/pdf,.pdf" multiple hidden></label><div id="attachmentRows"></div></div>
+            <div class="full-row detail-editor"><h3>工單附件</h3><p class="help-text">照片或 PDF；單檔上限 15 MB。備份會包含已存附件；配對後可同步至 Google Drive。</p><label class="secondary file-label">選取附件<input type="file" id="maintenanceFiles" accept="image/jpeg,image/png,image/webp,image/gif,application/pdf,.pdf" multiple hidden></label><div id="attachmentRows"></div></div>
+            <div id="ocrReview" class="full-row ocr-review" hidden><label class="ocr-check-label"><input type="checkbox" id="ocrReviewed"><span>我已核對車輛、日期、里程、實付及各項明細，確認以原始工單為準。</span></label></div>
             <div class="form-actions full-row">
               <button type="submit" class="primary" id="saveMaintenance">儲存維修紀錄</button>
               <button type="button" class="secondary" id="maintenanceCancelBtn">取消</button>
@@ -199,7 +212,8 @@
 
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
-  <script src="cloud.js?v=588" defer></script>
-  <script src="app.js?v=588" defer></script>
+  <script src="cloud.js?v=590" defer></script>
+  <script src="ocr.js?v=590" defer></script>
+  <script src="app.js?v=590" defer></script>
 </body>
 </html>

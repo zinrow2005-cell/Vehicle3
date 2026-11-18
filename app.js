@@ -1,5 +1,5 @@
 const STORAGE_KEY = 'vehiclehub_lite_v580';
-const APP_VERSION = 'V5.8.8';
+const APP_VERSION = 'V5.9.0';
 let state = null;
 const SNAPSHOT_KEY=STORAGE_KEY+'_previous';
 let lastMergeReport=null, editDetails=[], editAttachments=[], fileBusy=false, editorEpoch=0, detailsDirty=false;
@@ -31,7 +31,7 @@ async function loadInitialData() {
   }
   state=blankData(); persist(false);
 }
-function blankData(){return {version:'5.8.8',appName:'Vehicle Hub Lite',settings:{lastVehicleId:'local-default'},vehicles:[{id:'local-default',name:'我的車輛',fuelType:'',odometer:0}],fuel:[],maintenance:[],meta:{}};}
+function blankData(){return {version:'5.9.0',appName:'Vehicle Hub Lite',settings:{lastVehicleId:'local-default'},vehicles:[{id:'local-default',name:'我的車輛',fuelType:'',odometer:0}],fuel:[],maintenance:[],meta:{}};}
 
 function persist(snapshot=true) {
   state.meta=state.meta||{};state.meta.savedAt=new Date().toISOString();
@@ -64,7 +64,7 @@ function normalizeImportedData(data) {
   }
   // 保留紀錄欄位（包括維修明細及估算旗標），不保留已移除的模組。
   const selected=data.settings?.lastVehicleId||data.activeVehicleId;
-  const result={version:'5.8.8',appName:'Vehicle Hub Lite',settings:{lastVehicleId:ids.has(selected)?selected:out.vehicles[0].id},vehicles:out.vehicles,fuel:out.fuel,maintenance:out.maintenance,meta:out.meta||{},trash:Array.isArray(out.trash)?out.trash.filter(x=>x&&['fuel','maintenance'].includes(x.key)&&x.record&&ids.has(x.record.vehicleId)&&typeof x.record.id==='string'&&/^\d{4}-\d{2}-\d{2}$/.test(x.record.date||'')):[],tombstones:Array.isArray(out.tombstones)?out.tombstones.filter(x=>x&&['fuel','maintenance'].includes(x.key)&&typeof x.id==='string'):[]};
+  const result={version:'5.9.0',appName:'Vehicle Hub Lite',settings:{lastVehicleId:ids.has(selected)?selected:out.vehicles[0].id},vehicles:out.vehicles,fuel:out.fuel,maintenance:out.maintenance,meta:out.meta||{},trash:Array.isArray(out.trash)?out.trash.filter(x=>x&&['fuel','maintenance'].includes(x.key)&&x.record&&ids.has(x.record.vehicleId)&&typeof x.record.id==='string'&&/^\d{4}-\d{2}-\d{2}$/.test(x.record.date||'')):[],tombstones:Array.isArray(out.tombstones)?out.tombstones.filter(x=>x&&['fuel','maintenance'].includes(x.key)&&typeof x.id==='string'):[]};
   refreshVehicleOdometers(result);return result;
 }
 
@@ -432,6 +432,7 @@ function resetFuelForm() {
 }
 
 function resetMaintenanceForm() {
+  if(typeof resetOcrUI==='function')resetOcrUI();
   editorVehicle.maintenance=null;editorEpoch++;fileBusy=false;editDetails=[];editAttachments=[];detailsDirty=false;el('saveMaintenance').disabled=false;el('maintenanceVehicleLabel').textContent='';
   el('maintenanceForm').reset();
   el('maintenanceId').value = '';
@@ -480,6 +481,8 @@ function bindForms() {
   el('maintenanceForm').addEventListener('submit', (e) => {
     e.preventDefault();
     if(!canSaveEditor('maintenance',state.maintenance))return;
+    if(typeof ocrCanSave==='function'&&!ocrCanSave())return;
+    if(el('maintenanceTotal').value===''){showToast('請填寫實付金額（免費服務請填 0）');return;}
     const record = {
       ...state.maintenance.find(r=>r.id===el('maintenanceId').value),
       id: el('maintenanceId').value || uid('maint'),
@@ -504,6 +507,7 @@ function bindForms() {
       return;
     }
     if(!record.summary&&record.details.length)record.summary=deriveSummary(record);
+    if(typeof ocrRecordMetadata==='function'){const info=ocrRecordMetadata();if(info)record.ocrImport=info;}
     if(!confirmMileage(record)||!confirmDuplicate('maintenance',record))return;
     if(detailsDirty&&record.details.length&&Math.abs(detailTotals(record.details,record.discount,record.discountMode).total-record.total)>0.01&&!confirm('明細與實付金額不同，仍保留原單實付金額？'))return;
     const idx = state.maintenance.findIndex(r => r.id === record.id);
@@ -573,6 +577,7 @@ function bindLists() {
       if(!canDiscardEditors())return;resetFuelForm();resetMaintenanceForm();
       document.querySelector('[data-tab="maintenance"]').click();
       el('maintenanceFormTitle').textContent = '編輯維修紀錄';
+      if(typeof resetOcrUI==='function')el('ocrPanel').hidden=true;
       setEditorVehicle('maintenance');
       el('maintenanceEditor').hidden = false;
       el('maintenanceId').value = record.id;
@@ -641,7 +646,7 @@ async function main() {
   bindLists();
   bindDataActions();
   bindVehicleSelect();
-  bindLiteUI();bindDetailUI();
+  bindLiteUI();bindDetailUI();if(typeof bindOcrUI==='function')bindOcrUI();
   renderAll();
   resetFuelForm();
   resetMaintenanceForm();
@@ -654,8 +659,8 @@ async function main() {
 function confirmMileage(record){if(!(record.odometer>0))return true;const other=[...state.fuel,...state.maintenance].filter(r=>r.vehicleId===record.vehicleId&&r.id!==record.id&&r.odometer>0);const conflict=other.find(r=>(r.date<record.date&&r.odometer>record.odometer)||(r.date>record.date&&r.odometer<record.odometer));return !conflict||confirm(`里程日期可能衝突：${conflict.date} 為 ${currency(conflict.odometer)} km。仍要儲存本筆？`);}
 function updatePrice(){const l=Number(el('fuelLiters').value),a=el('fuelAmount').value;el('fuelPricePreview').textContent=l>0&&a!==''?`每公升 NT$ ${num(Number(a)/l,2)}`:'每公升價格 —';}
 function bindLiteUI(){
-  const open=(key)=>{if(!canDiscardEditors())return;resetFuelForm();resetMaintenanceForm();restoreVehicleSettings();document.querySelector(`[data-tab="${key}"]`).click();setEditorVehicle(key);el(key+'Editor').hidden=false;el(key+'Editor').scrollIntoView({block:'start',behavior:'smooth'});};
-  el('quickFuel').onclick=()=>open('fuel');el('quickMaint').onclick=()=>open('maintenance');el('fuelNewBtn').onclick=()=>open('fuel');el('maintenanceNewBtn').onclick=()=>open('maintenance');
+  const open=(key,ocr=false)=>{if(!canDiscardEditors())return false;resetFuelForm();resetMaintenanceForm();restoreVehicleSettings();document.querySelector(`[data-tab="${key}"]`).click();setEditorVehicle(key);el(key+'Editor').hidden=false;el(key+'Editor').scrollIntoView({block:'start',behavior:'smooth'});if(ocr&&typeof resetOcrUI==='function'){el('ocrPanel').open=true;}return true;};
+  el('quickFuel').onclick=()=>open('fuel');el('quickMaint').onclick=()=>open('maintenance');el('fuelNewBtn').onclick=()=>open('fuel');el('maintenanceNewBtn').onclick=()=>open('maintenance');if(typeof bindOcrUI==='function')el('ocrNewBtn').onclick=()=>open('maintenance',true);
   for(const key of ['fuel','maintenance']){
     const refresh=key==='fuel'?renderFuelTable:renderMaintenanceTable,input=el(key+'Search');
     for(const event of ['input','change','focus'])input.addEventListener(event,refresh);
@@ -682,7 +687,7 @@ function validAttachmentRef(r){return r&&typeof r.id==='string'&&r.id.length>0&&
 function openAttachments(){return new Promise((resolve,reject)=>{if(typeof indexedDB==='undefined'){reject(new Error('此瀏覽器不支援本機附件'));return;}const q=indexedDB.open('vehiclehub_lite_attachments',1);q.onupgradeneeded=()=>q.result.createObjectStore('files');q.onsuccess=()=>resolve(q.result);q.onerror=()=>reject(q.error);});}
 async function putAttachment(id,blob){const db=await openAttachments();try{await new Promise((resolve,reject)=>{const t=db.transaction('files','readwrite');t.objectStore('files').put(blob,id);t.oncomplete=resolve;t.onabort=t.onerror=()=>reject(t.error||new Error('附件儲存失敗'));});}finally{db.close();}}
 async function getAttachment(id){const db=await openAttachments();try{return await new Promise((resolve,reject)=>{const q=db.transaction('files','readonly').objectStore('files').get(id);q.onsuccess=()=>resolve(q.result||null);q.onerror=()=>reject(q.error);});}finally{db.close();}}
-function attachmentHTML(r){const refs=r.localAttachments||[];return `<div class="attachment-list">${refs.map(a=>`<button type="button" class="row-btn" data-open-attachment="${escapeHtml(a.id)}">📎 ${escapeHtml(a.name)}</button>`).join('')}${!refs.length&&r.attachmentName?`<p class="help-text">舊單據：${escapeHtml(r.attachmentName)}（尚未存入本機）</p>`:''}</div>`;}
+function attachmentHTML(r){const refs=r.localAttachments||[];return `<div class="attachment-list">${refs.map(a=>`<button type="button" class="row-btn" data-open-attachment="${escapeHtml(a.id)}">📎 ${escapeHtml(a.name)}</button>`).join('')}${!refs.length&&r.attachmentName?`<p class="help-text">舊單據：${escapeHtml(r.attachmentName)}（尚未存入本機）</p>`:''}</div>${r.ocrImport?.reviewed?`<details class="ocr-history"><summary>影像辨識原文（已人工核對）</summary><p class="help-text">${escapeHtml(r.ocrImport.method==='ai'?'AI 進階':r.ocrImport.method==='drive'?'Drive OCR':'文字匯入')}${r.ocrImport.textTruncated?' · 文字已截短，請以原單為準':''}</p><pre>${escapeHtml(r.ocrImport.rawText||r.ocrImport.parsedText||'')}</pre>${r.ocrImport.rawText&&r.ocrImport.parsedText?`<pre>${escapeHtml(r.ocrImport.parsedText)}</pre>`:''}</details>`:''}`;}
 function renderAttachmentEditor(){el('attachmentRows').innerHTML=editAttachments.map(a=>`<div class="attachment-row"><button type="button" class="row-btn" data-open-attachment="${escapeHtml(a.id)}">${escapeHtml(a.name)}</button><button class="row-btn delete" type="button" data-remove-attachment="${escapeHtml(a.id)}">移除</button></div>`).join('');}
 function allRefs(data){return [...data.maintenance,...(data.trash||[]).filter(x=>x.key==='maintenance').map(x=>x.record)].flatMap(r=>r.localAttachments||[]);}
 function blobData(blob){return new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>res(r.result.split(',')[1]);r.onerror=()=>rej(r.error);r.readAsDataURL(blob);});}
