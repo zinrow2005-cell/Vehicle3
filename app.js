@@ -1,5 +1,5 @@
 const STORAGE_KEY = 'vehiclehub_lite_v580';
-const APP_VERSION = 'V5.8.3';
+const APP_VERSION = 'V5.8.4';
 let state = null;
 const SNAPSHOT_KEY=STORAGE_KEY+'_previous';
 let lastMergeReport=null, editDetails=[], editAttachments=[], fileBusy=false, editorEpoch=0, detailsDirty=false;
@@ -31,13 +31,15 @@ async function loadInitialData() {
   }
   state=blankData(); persist(false);
 }
-function blankData(){return {version:'5.8.3',appName:'Vehicle Hub Lite',settings:{lastVehicleId:'local-default'},vehicles:[{id:'local-default',name:'我的車輛',fuelType:'',odometer:0}],fuel:[],maintenance:[],meta:{}};}
+function blankData(){return {version:'5.8.4',appName:'Vehicle Hub Lite',settings:{lastVehicleId:'local-default'},vehicles:[{id:'local-default',name:'我的車輛',fuelType:'',odometer:0}],fuel:[],maintenance:[],meta:{}};}
 
 function persist(snapshot=true) {
   state.meta=state.meta||{};state.meta.savedAt=new Date().toISOString();
   const prior=localStorage.getItem(STORAGE_KEY);const next=JSON.stringify(state);
+  if(typeof cloudTabStale!=='undefined'&&(cloudTabStale||(cloudDisk!==null&&prior!==cloudDisk))){if(prior)state=normalizeImportedData(JSON.parse(prior));showToast('另一分頁已變更，請重新整理後再操作');throw new Error('本機分頁版本衝突');}
   try{if(snapshot&&prior&&prior!==next)localStorage.setItem(SNAPSHOT_KEY,prior);localStorage.setItem(STORAGE_KEY,next);}
   catch(err){if(prior)state=normalizeImportedData(JSON.parse(prior));showToast('本機儲存失敗，未完成變更；請備份並釋放空間');throw err;}
+  if(typeof cloudAfterPersist==='function'){cloudDisk=localStorage.getItem(STORAGE_KEY);cloudAfterPersist();}
 }
 
 function normalizeImportedData(data) {
@@ -62,7 +64,7 @@ function normalizeImportedData(data) {
   }
   // 保留紀錄欄位（包括維修明細及估算旗標），不保留已移除的模組。
   const selected=data.settings?.lastVehicleId||data.activeVehicleId;
-  const result={version:'5.8.3',appName:'Vehicle Hub Lite',settings:{lastVehicleId:ids.has(selected)?selected:out.vehicles[0].id},vehicles:out.vehicles,fuel:out.fuel,maintenance:out.maintenance,meta:out.meta||{},trash:Array.isArray(out.trash)?out.trash.filter(x=>x&&['fuel','maintenance'].includes(x.key)&&x.record&&ids.has(x.record.vehicleId)&&typeof x.record.id==='string'&&/^\d{4}-\d{2}-\d{2}$/.test(x.record.date||'')):[],tombstones:Array.isArray(out.tombstones)?out.tombstones.filter(x=>x&&['fuel','maintenance'].includes(x.key)&&typeof x.id==='string'):[]};
+  const result={version:'5.8.4',appName:'Vehicle Hub Lite',settings:{lastVehicleId:ids.has(selected)?selected:out.vehicles[0].id},vehicles:out.vehicles,fuel:out.fuel,maintenance:out.maintenance,meta:out.meta||{},trash:Array.isArray(out.trash)?out.trash.filter(x=>x&&['fuel','maintenance'].includes(x.key)&&x.record&&ids.has(x.record.vehicleId)&&typeof x.record.id==='string'&&/^\d{4}-\d{2}-\d{2}$/.test(x.record.date||'')):[],tombstones:Array.isArray(out.tombstones)?out.tombstones.filter(x=>x&&['fuel','maintenance'].includes(x.key)&&typeof x.id==='string'):[]};
   refreshVehicleOdometers(result);return result;
 }
 
@@ -368,7 +370,7 @@ function renderDataMeta() {
     <div class="meta-item"><strong>維修紀錄</strong>${maintenanceCount} 筆</div>
     <div class="meta-item"><strong>全部車輛備份範圍</strong>${vehicleCount} 台 · 加油 ${state.fuel.length} 筆 · 維修 ${state.maintenance.length} 筆</div>
     <div class="meta-item"><strong>最近儲存（全部資料）</strong>${savedAt}</div>
-    <div class="meta-item"><strong>說明</strong>此版本不含登入與雲端同步，資料保存在本機瀏覽器。</div>
+    <div class="meta-item"><strong>說明</strong>免登入；資料先存本機，配對後自動同步所有車輛。</div>
   `;
 }
 
@@ -586,21 +588,21 @@ function bindLists() {
 function bindDataActions(){
   const exportAction=async()=>{try{const data=JSON.parse(JSON.stringify(state));data.attachmentFiles=await exportAttachmentFiles(data);downloadFile(JSON.stringify(data,null,2),'VehicleHub_Lite_Backup_'+todayISO()+'.json','application/json');showToast('已匯出備份（含已存附件）');}catch(e){showToast('備份失敗：'+e.message);}};
   el('exportBtn').addEventListener('click',exportAction);el('exportBtn2').addEventListener('click',exportAction);
-  const importHandler=async event=>{const file=event.target.files?.[0];if(!file)return;try{
-    if(!canDiscardEditors())return;const before=JSON.stringify(state),parsed=JSON.parse(await file.text());const incoming=normalizeImportedData(parsed);const mode=el('importMode').value||'merge';
+  const importHandler=async event=>{const file=event.target.files?.[0];if(!file)return;if(typeof cloudImportBusy!=='undefined')cloudImportBusy=true;try{
+    if(!canDiscardEditors())return;const before=JSON.stringify(state),parsed=JSON.parse(await file.text());const incoming=normalizeImportedData(parsed);const mode=el('importMode').value||'merge';if(typeof cloudConfig!=='undefined'&&cloudConfig&&mode==='replace')throw new Error('配對期間僅允許安全合併');
     const m=mode==='replace'?{data:incoming,conflicts:[],added:incoming.fuel.length+incoming.maintenance.length}:mergeData(state,incoming);
     if(!confirm(`${mode==='replace'?'取代全部資料':'安全合併'}：匯入 ${incoming.fuel.length} 筆加油、${incoming.maintenance.length} 筆維修。新增／還原 ${m.added} 筆；衝突 ${m.conflicts.length} 筆（合併時保留本機版）。確定繼續？`))return;
     await importAttachmentFiles(parsed.attachmentFiles||parsed.data?.attachmentFiles||[],m.data);
     if(JSON.stringify(state)!==before)throw new Error('匯入期間本機資料已變更，請重新匯入');
     if(!canDiscardEditors())return;
     state=m.data;persist();resetFuelForm();resetMaintenanceForm();resetVehicleFilters();renderAll();lastMergeReport=m.conflicts;el('mergeReport').hidden=false;el('mergeReport').textContent=`完成：新增／還原 ${m.added} 筆，衝突 ${m.conflicts.length} 筆。`;el('exportConflicts').hidden=!m.conflicts.length;showToast('資料匯入完成');
-  }catch(err){console.error(err);showToast('匯入未完成：'+err.message);}finally{event.target.value='';}};
+  }catch(err){console.error(err);showToast('匯入未完成：'+err.message);}finally{if(typeof cloudImportBusy!=='undefined'){cloudImportBusy=false;cloudSchedule();}event.target.value='';}};
   el('importInput').addEventListener('change',importHandler);el('importInput2').addEventListener('change',importHandler);
   el('exportConflicts').onclick=()=>{if(lastMergeReport?.length)downloadFile(JSON.stringify(lastMergeReport,null,2),'VehicleHub_合併衝突_'+todayISO()+'.json','application/json');};
   el('exportFuelCsv').onclick=()=>exportCSV('fuel');el('exportMaintCsv').onclick=()=>exportCSV('maintenance');
-  el('restoreSnapshot').onclick=()=>{const saved=localStorage.getItem(SNAPSHOT_KEY);if(!saved){showToast('尚無復原點');return;}if(!canDiscardEditors()||!confirm('復原上一個本機資料版本？目前版本將成為新的復原點。'))return;try{state=normalizeImportedData(JSON.parse(saved));persist();resetFuelForm();resetMaintenanceForm();resetVehicleFilters();renderAll();showToast('已復原上一版本');}catch(err){showToast('復原失敗：'+err.message);}};
+  el('restoreSnapshot').onclick=()=>{if(typeof cloudConfig!=='undefined'&&cloudConfig)return showToast('配對期間暫停整份復原');const saved=localStorage.getItem(SNAPSHOT_KEY);if(!saved){showToast('尚無復原點');return;}if(!canDiscardEditors()||!confirm('復原上一個本機資料版本？目前版本將成為新的復原點。'))return;try{state=normalizeImportedData(JSON.parse(saved));persist();resetFuelForm();resetMaintenanceForm();resetVehicleFilters();renderAll();showToast('已復原上一版本');}catch(err){showToast('復原失敗：'+err.message);}};
   el('restoreDeleted').onclick=()=>{const entry=(state.trash||[])[(state.trash||[]).length-1];if(!entry){showToast('無可復原的刪除紀錄');return;}if(!canDiscardEditors()||!confirm('復原最近刪除的紀錄？'))return;if(!state.vehicles.some(v=>v.id===entry.record.vehicleId)||state[entry.key].some(r=>r.id===entry.record.id)){showToast('原車輛不存在或紀錄已存在');return;}state[entry.key].push(entry.record);state.trash.pop();state.tombstones=(state.tombstones||[]).filter(t=>!(t.key===entry.key&&t.id===entry.record.id));refreshVehicleOdometers();persist();resetFuelForm();resetMaintenanceForm();renderAll();showToast('已復原紀錄');};
-  el('resetLocalBtn').addEventListener('click',()=>{if(!canDiscardEditors()||!confirm('確定清除本機所有車輛及全部紀錄？請先匯出備份。'))return;state=blankData();persist();resetFuelForm();resetMaintenanceForm();resetVehicleFilters();renderAll();showToast('已清除本機資料');});
+  el('resetLocalBtn').addEventListener('click',()=>{if(typeof cloudConfig!=='undefined'&&cloudConfig)return showToast('請先解除配對並備份');if(!canDiscardEditors()||!confirm('確定清除本機所有車輛及全部紀錄？請先匯出備份。'))return;state=blankData();persist();resetFuelForm();resetMaintenanceForm();resetVehicleFilters();renderAll();showToast('已清除本機資料');});
 }
 
 function escapeHtml(value) {
@@ -622,6 +624,7 @@ async function main() {
   renderAll();
   resetFuelForm();
   resetMaintenanceForm();
+  if(typeof cloudInit==='function')cloudInit();
   if ('serviceWorker' in navigator) {
     navigator.serviceWorker.register('./sw.js').catch(() => {});
   }

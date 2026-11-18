@@ -3,17 +3,17 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <title>Vehicle Hub Lite V5.8.3</title>
+  <title>Vehicle Hub Lite V5.8.4</title>
   <meta name="theme-color" content="#f6f8fb" />
   <link rel="manifest" href="manifest.webmanifest" />
   <link rel="icon" href="icon-192.png" />
-  <link rel="stylesheet" href="styles.css?v=583" />
+  <link rel="stylesheet" href="styles.css?v=584" />
 </head>
 <body>
   <div class="app-shell">
     <header class="topbar">
       <div>
-        <p class="eyebrow">VEHICLE HUB · LITE 5.8.3</p>
+        <p class="eyebrow">VEHICLE HUB · LITE 5.8.4</p>
         <h1>我的車輛紀錄</h1>
         <p class="subtext">加油・維修・油耗</p>
       </div>
@@ -31,7 +31,7 @@
       <div class="vehicle-control">
         <label for="vehicleSelect">目前瀏覽車輛 · 點此切換</label>
         <select id="vehicleSelect" aria-describedby="vehicleScope"></select>
-        <div class="vehicle-scope" id="vehicleScope" aria-live="polite"></div><div class="vehicle-mileage" id="vehicleMileage"></div>
+        <div class="vehicle-scope" id="vehicleScope" aria-live="polite"></div><div class="vehicle-mileage" id="vehicleMileage"></div><div id="cloudBarStatus" class="cloud-bar" aria-live="polite">本機模式</div>
       </div>
     </section>
 
@@ -168,6 +168,11 @@
       </section>
 
       <section class="tab-panel" id="panel-data">
+        <div class="panel cloud-panel"><div class="panel-head"><h2>雲端同步</h2><span id="cloudStatus" class="cloud-state" aria-live="polite">本機模式</span></div>
+        <p id="cloudLast" class="help-text">尚未完成第一次同步</p>
+        <div id="cloudConfigPanel"><p class="help-text">一次配對即可自動同步；不需要登入頁。請勿將配對金鑰或私人備份上傳 GitHub。</p><div class="form-grid top-gap"><label><span>Apps Script Web App 網址（/exec）</span><input id="cloudEndpoint" type="url" autocomplete="off" placeholder="https://script.google.com/macros/s/…/exec"></label><label><span>私人配對金鑰</span><input id="cloudKey" type="password" autocomplete="off" autocapitalize="none" spellcheck="false" placeholder="64 字元金鑰"></label></div><div class="data-actions top-gap"><button class="primary" id="cloudPair">配對並開始同步</button></div></div>
+        <div id="cloudPairedPanel" hidden><p class="help-text">開啟網站、儲存資料、恢復網路時自動雙向同步；前景每分鐘核對。編輯表單時暫緩更新。整份還原與清除全部資料在配對期間停用。</p><div class="data-actions top-gap"><button class="primary" id="cloudSyncNow">立即同步</button><button class="secondary" id="cloudDisconnect">解除本機配對</button></div></div>
+        <div class="inline-note top-gap" id="cloudConflictPanel" hidden><strong>資料衝突，尚未覆蓋</strong><p>先下載衝突報告及完整備份，再決定只針對衝突採用哪一端；其他紀錄照常合併。</p><div class="data-actions"><button class="secondary" id="cloudExportConflicts">下載衝突報告</button><button class="secondary" id="cloudKeepLocal">衝突採用本機</button><button class="secondary" id="cloudKeepRemote">衝突採用雲端</button></div></div></div>
         <div class="grid-2">
           <div class="panel">
             <div class="panel-head"><h2>全部車輛備份</h2></div>
@@ -178,7 +183,7 @@
                 <input type="file" id="importInput2" accept="application/json,.json" hidden />
               </label>
             </div>
-            <p class="help-text">JSON 備份含全部車輛及已存附件。安全合併不覆蓋同 ID 的不同資料；衝突可下載報告核對。跨裝置仍須手動匯出／匯入。</p><div id="mergeReport" class="inline-note" hidden></div><button class="secondary" id="exportConflicts" hidden>下載合併衝突報告</button><div class="data-actions top-gap"><button class="secondary" id="exportFuelCsv">匯出此車加油 CSV</button><button class="secondary" id="exportMaintCsv">匯出此車維修 CSV</button></div><div class="data-actions top-gap"><button class="secondary" id="restoreSnapshot">復原上一次資料變更</button><button class="secondary" id="restoreDeleted">復原最近刪除紀錄</button></div><p class="help-text" id="snapshotInfo"></p>
+            <p class="help-text">JSON 備份含全部車輛及已存附件。安全合併不覆蓋同 ID 的不同資料；衝突可下載報告核對。未配對時可手動匯出／匯入；配對後會自動同步。</p><div id="mergeReport" class="inline-note" hidden></div><button class="secondary" id="exportConflicts" hidden>下載合併衝突報告</button><div class="data-actions top-gap"><button class="secondary" id="exportFuelCsv">匯出此車加油 CSV</button><button class="secondary" id="exportMaintCsv">匯出此車維修 CSV</button></div><div class="data-actions top-gap"><button class="secondary" id="restoreSnapshot">復原上一次資料變更</button><button class="secondary" id="restoreDeleted">復原最近刪除紀錄</button></div><p class="help-text" id="snapshotInfo"></p>
           </div>
           <div class="panel">
             <div class="panel-head"><h2>目前車輛資料</h2></div>
@@ -194,6 +199,7 @@
 
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
-  <script src="app.js?v=583" defer></script>
+  <script src="cloud.js?v=584" defer></script>
+  <script src="app.js?v=584" defer></script>
 </body>
 </html>
