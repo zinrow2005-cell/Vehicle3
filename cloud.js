@@ -1,4 +1,4 @@
-/* Vehicle Hub Lite 5.9.0 | paired, revision-checked cloud sync */
+/* Vehicle Hub Lite 5.8.8 | paired, revision-checked cloud sync */
 const DEFAULT_CLOUD_ENDPOINT='https://script.google.com/macros/s/AKfycbwh1kMC3EIApmh-OAuURhzeehjuEBdQwGZW2OAgPmo7TCH-ymoyrjib0vludAJEMwNNng/exec';
 const CLOUD_CONFIG='vehiclehub_lite_cloud_config_v1', CLOUD_BASE='vehiclehub_lite_cloud_base_v1';
 let cloudBaseLoaded=false, cloudChannel=null;
