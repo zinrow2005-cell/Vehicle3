@@ -1,4 +1,4 @@
-/* Vehicle Hub Lite 5.8.6 | paired, revision-checked cloud sync */
+/* Vehicle Hub Lite 5.8.8 | paired, revision-checked cloud sync */
 const DEFAULT_CLOUD_ENDPOINT='https://script.google.com/macros/s/AKfycbwh1kMC3EIApmh-OAuURhzeehjuEBdQwGZW2OAgPmo7TCH-ymoyrjib0vludAJEMwNNng/exec';
 const CLOUD_CONFIG='vehiclehub_lite_cloud_config_v1', CLOUD_BASE='vehiclehub_lite_cloud_base_v1';
 let cloudBaseLoaded=false, cloudChannel=null;
@@ -44,6 +44,8 @@ function cloudStatus(message,kind='neutral'){
   el('cloudLast').textContent=cloudBase?`最近確認雲端 r${cloudBase.revision}｜${new Date(cloudBase.checkedAt).toLocaleString('zh-TW')}`:'尚未完成第一次同步';
   el('cloudSyncNow').disabled=!cloudConfig||cloudBusy;el('cloudDisconnect').disabled=!cloudConfig||cloudBusy;el('cloudPair').disabled=cloudBusy;
   el('cloudConflictPanel').hidden=!cloudConflicts.length;
+  const quick=el('cloudQuickSync');if(quick){quick.disabled=!cloudConfig||cloudBusy||cloudTabStale;quick.hidden=!cloudConfig;}
+  cloudRenderCounts();
 }
 function cloudRead(key){try{return JSON.parse(localStorage.getItem(key)||'null');}catch(e){return null;}}
 // Large common ancestors use IndexedDB, never localStorage. Keep the old key only
@@ -88,11 +90,30 @@ async function cloudFiles(data){
     else {if(!remote||remote.size!==ref.size||remote.type!==ref.type)throw new Error('本機與雲端均無有效附件：'+ref.name);const f=await cloudRequest('getFile',{id:ref.id});const bytes=Uint8Array.from(atob(f.base64),c=>c.charCodeAt(0));blob=new Blob([bytes],{type:ref.type});if(blob.size!==ref.size||await cloudHash(blob)!==remote.hash)throw new Error('下載附件驗證失敗：'+ref.name);await putAttachment(ref.id,blob);}
   }
 }
-let cloudImportBusy=false,cloudVerifiedFiles='';
-function cloudSchedule(ms=1800){if(!cloudConfig||cloudApplying)return;clearTimeout(cloudTimer);cloudTimer=setTimeout(()=>cloudSync(),ms);}
+let cloudImportBusy=false,cloudVerifiedFiles='',cloudQueued=false,cloudDeferred=false;
+// Counts are the last verified common revision, never presented as live remote data.
+function cloudVehicleComparison(data,base,id){
+  const counts=d=>({fuel:(d?.fuel||[]).filter(r=>r.vehicleId===id).length,maintenance:(d?.maintenance||[]).filter(r=>r.vehicleId===id).length,attachments:new Set((d?.maintenance||[]).filter(r=>r.vehicleId===id).flatMap(r=>(r.localAttachments||[]).map(x=>x.id))).size});
+  const rows=d=>{const ordered=k=>(d?.[k]||[]).filter(r=>r.vehicleId===id).slice().sort((a,b)=>a.id.localeCompare(b.id));const v=(d?.vehicles||[]).find(v=>v.id===id);return {vehicle:v?Object.fromEntries(Object.entries(v).filter(([k])=>!['odometer','odometerDate','odometerEstimated'].includes(k))):null,fuel:ordered('fuel'),maintenance:ordered('maintenance')};};
+  return {local:counts(data),confirmed:base?counts(base):null,match:base?stable(rows(data))===stable(rows(base)):null};
+}
+function cloudRenderCounts(){
+  if(typeof state==='undefined'||!state||typeof getSelectedVehicleId!=='function')return;
+  const panel=el('cloudCompare');if(!panel)return;panel.hidden=!cloudConfig;if(!cloudConfig)return;
+  const base=cloudBase?.data||null,id=getSelectedVehicleId(),x=cloudVehicleComparison(state,base,id),v=getSelectedVehicle();
+  const fmt=(r)=>r?`加油 ${r.fuel} 筆 · 維修 ${r.maintenance} 筆 · 附件 ${r.attachments} 份`:'尚未確認';
+  el('cloudCompareVehicle').textContent=vehicleLabel(v);el('cloudCompareLocal').textContent=fmt(x.local);el('cloudCompareBase').textContent=fmt(x.confirmed);
+  el('cloudCompareMatch').textContent=x.match===null?'第一次同步後可核對':x.match?'此車紀錄與最近確認版本一致':'此車與最近確認版本有差異（可能尚待同步）';
+  el('cloudCompareMatch').dataset.kind=x.match===null?'neutral':x.match?'ok':'wait';
+  el('cloudCompareAll').textContent=`全部車輛本機：${state.vehicles.length} 台 · 加油 ${state.fuel.length} 筆 · 維修 ${state.maintenance.length} 筆`+(base?`｜最近確認：${base.vehicles.length} 台 · 加油 ${base.fuel.length} 筆 · 維修 ${base.maintenance.length} 筆`:'');
+}
+function cloudResumeAfterEdit(){if(cloudConfig&&cloudDeferred&&!cloudEditsOpen()){cloudDeferred=false;cloudSchedule(50);}}
+
+function cloudSchedule(ms=1800){if(!cloudConfig||cloudApplying)return;if(cloudBusy){cloudQueued=true;return;}clearTimeout(cloudTimer);cloudTimer=setTimeout(()=>cloudSync(),ms);}
 function cloudAfterPersist(){if(!cloudConfig||cloudApplying)return;cloudDisk=localStorage.getItem(STORAGE_KEY);cloudSchedule();if(!cloudBusy&&(!cloudBase||stable(cloudPayload(state))!==stable(cloudBase.data)))cloudStatus('本機已儲存 · 待同步','wait');}
 async function cloudSync(choice='',manual=false){
-  if(!cloudConfig||cloudBusy)return;if(cloudTabStale){cloudStatus('其他分頁已更新，請重新整理','warn');return;}if(navigator.onLine===false){cloudStatus('離線 · 資料保存在本機','wait');return;}if(cloudEditsOpen()){cloudStatus('表單編輯中 · 暫緩同步','wait');return;}
+  if(!cloudConfig)return;if(cloudBusy){cloudQueued=true;return;}if(cloudTabStale){cloudStatus('其他分頁已更新，請重新整理','warn');return;}if(navigator.onLine===false){cloudStatus('離線 · 資料保存在本機','wait');return;}if(cloudEditsOpen()){cloudDeferred=true;cloudStatus('表單編輯中 · 儲存或取消後自動續同步','wait');return;}
+  cloudDeferred=false;
   cloudBusy=true;cloudStatus('正在核對雲端…','busy');
   try{
     await cloudLoadBase();
@@ -107,26 +128,26 @@ async function cloudSync(choice='',manual=false){
     if(!target.vehicles.length){cloudConflicts=[];cloudStatus('雲端尚無資料 · 請先匯入備份或新增車輛','wait');return;}
     const prepared=normalizeImportedData({...target,settings:state.settings,meta:state.meta});const canonical=cloudPayload(prepared);
     const fileSig=stable(allRefs(prepared));if(cloudVerifiedFiles!==fileSig||manual){await cloudFiles(prepared);cloudVerifiedFiles=fileSig;}
-    if(!cloudCanApply(raw,sig)){cloudStatus('資料或表單已變更 · 等待下次同步','wait');return;}
+    if(!cloudCanApply(raw,sig)){if(cloudEditsOpen())cloudDeferred=true;else if(!cloudTabStale)cloudQueued=true;cloudStatus('資料或表單已變更 · 等待重新核對','wait');return;}
     let revision=head.revision;
     if(stable(canonical)!==stable(remote)){cloudStatus('正在上傳紀錄…','busy');const pushed=await cloudRequest('push',{baseRevision:head.revision,data:canonical});revision=pushed.revision;if(revision!==head.revision+1)throw new Error('雲端回應版本不一致');}
-    if(!cloudCanApply(raw,sig)){cloudStatus('雲端已核對 · 本機有新變更，等待下次同步','wait');return;}
+    if(!cloudCanApply(raw,sig)){if(cloudEditsOpen())cloudDeferred=true;else if(!cloudTabStale)cloudQueued=true;cloudStatus('雲端已核對 · 本機有新變更，等待重新核對','wait');return;}
     if(stable(canonical)!==sig){cloudApplying=true;try{state=prepared;persist(true);cloudDisk=localStorage.getItem(STORAGE_KEY);resetFuelForm();resetMaintenanceForm();renderAll();}finally{cloudApplying=false;}}
     const next={dataset:cloudConfig.dataset,revision,data:canonical,checkedAt:new Date().toISOString()};await cloudSaveBase(next);cloudConflicts=[];cloudConflictStamp='';if(!cloudCanApply(cloudDisk,stable(canonical))||cloudTabStale){cloudStatus('雲端已核對 · 本機有新變更，等待下次同步','wait');}else cloudStatus(`已同步 · r${revision}`,'ok');
   }catch(e){cloudStatus(e.code==='REVISION'?'另一裝置已更新 · 稍後重新比對':`同步未完成：${e.name==='QuotaExceededError'?'瀏覽器儲存空間不足，請保留備份，不要清除本站資料':e.message}`,'warn');}
-  finally{cloudBusy=false;el('cloudSyncNow').disabled=!cloudConfig;el('cloudDisconnect').disabled=!cloudConfig;el('cloudPair').disabled=false;}
+  finally{cloudBusy=false;el('cloudSyncNow').disabled=!cloudConfig;el('cloudDisconnect').disabled=!cloudConfig;el('cloudPair').disabled=false;const quick=el('cloudQuickSync');if(quick)quick.disabled=!cloudConfig||cloudTabStale;if(cloudQueued){cloudQueued=false;if(!cloudTabStale)cloudSchedule(250);}}
 }
 function cloudControls(){const paired=!!cloudConfig;el('cloudEndpoint').value=DEFAULT_CLOUD_ENDPOINT;el('cloudEndpointNote').textContent=paired?(cloudConfig.endpoint===DEFAULT_CLOUD_ENDPOINT?'已設定預設雲端位置（配對設定保留）':'已保留原先配對的雲端位置。如需改用預設位置，請先備份並解除配對。'):'已內建 Apps Script 網址，只需輸入私人配對金鑰。';el('cloudConfigPanel').hidden=paired;el('cloudPairedPanel').hidden=!paired;el('resetLocalBtn').disabled=paired;el('restoreSnapshot').disabled=paired;el('importMode').querySelector('option[value="replace"]').disabled=paired;if(paired&&el('importMode').value==='replace')el('importMode').value='merge';}
 function cloudInit(){
   cloudDisk=localStorage.getItem(STORAGE_KEY);cloudConfig=cloudRead(CLOUD_CONFIG);cloudBase=null;cloudBaseLoaded=false;
   if(typeof BroadcastChannel!=='undefined'){try{cloudChannel=new BroadcastChannel('vehiclehub_lite_cloud_base');cloudChannel.onmessage=e=>{if(cloudConfig&&e.data?.dataset===cloudConfig.dataset&&cloudBaseLoaded&&e.data.revision!==cloudBase?.revision){cloudTabStale=true;cloudStatus('其他分頁已更新 · 請重新整理','warn');}};}catch(_){}}
   cloudControls();cloudStatus(cloudConfig?'已配對 · 正在等待同步':'未配對 · 本機模式');
-  el('cloudPair').onclick=async()=>{if(cloudBusy)return;try{const endpoint=cloudEndpoint(el('cloudEndpoint').value.trim()||DEFAULT_CLOUD_ENDPOINT),key=el('cloudKey').value.trim();if(!/^[a-f0-9]{64}$/i.test(key))throw new Error('請輸入 64 字元配對金鑰');cloudBusy=true;cloudStatus('驗證配對中…','busy');const cfg={endpoint,key};const res=await cloudRequest('pull',{knownRevision:-1},cfg);cfg.dataset=res.dataset;await cloudBaseGet(cfg.dataset);await cloudBaseDelete(cfg.dataset);localStorage.setItem(CLOUD_CONFIG,JSON.stringify(cfg));localStorage.removeItem(CLOUD_BASE);cloudConfig=cfg;cloudBase=null;cloudBaseLoaded=false;cloudVerifiedFiles='';el('cloudKey').value='';cloudControls();cloudStatus('配對成功 · 等待同步','wait');}catch(e){cloudStatus('配對失敗：'+e.message,'warn');}finally{cloudBusy=false;el('cloudPair').disabled=false;el('cloudSyncNow').disabled=!cloudConfig;el('cloudDisconnect').disabled=!cloudConfig;if(cloudConfig)cloudSchedule(50);}};
-  el('cloudSyncNow').onclick=()=>cloudSync('',true);
-  el('cloudDisconnect').onclick=async()=>{if(cloudBusy||!confirm('解除這台裝置的配對？本機與雲端資料都保留。'))return;cloudBusy=true;try{await cloudBaseDelete(cloudConfig.dataset);localStorage.removeItem(CLOUD_CONFIG);localStorage.removeItem(CLOUD_BASE);cloudConfig=null;cloudBase=null;cloudBaseLoaded=false;cloudConflicts=[];cloudVerifiedFiles='';clearTimeout(cloudTimer);cloudControls();cloudStatus('未配對 · 本機模式');}catch(e){cloudStatus('解除配對失敗：'+e.message,'warn');}finally{cloudBusy=false;el('cloudSyncNow').disabled=!cloudConfig;el('cloudDisconnect').disabled=!cloudConfig;el('cloudPair').disabled=false;}};
+  el('cloudPair').onclick=async()=>{if(cloudBusy)return;try{const endpoint=cloudEndpoint(el('cloudEndpoint').value.trim()||DEFAULT_CLOUD_ENDPOINT),key=el('cloudKey').value.trim();if(!/^[a-f0-9]{64}$/i.test(key))throw new Error('請輸入 64 字元配對金鑰');cloudBusy=true;cloudStatus('驗證配對中…','busy');const cfg={endpoint,key};const res=await cloudRequest('pull',{knownRevision:-1},cfg);cfg.dataset=res.dataset;await cloudBaseGet(cfg.dataset);await cloudBaseDelete(cfg.dataset);localStorage.setItem(CLOUD_CONFIG,JSON.stringify(cfg));localStorage.removeItem(CLOUD_BASE);cloudConfig=cfg;cloudBase=null;cloudBaseLoaded=false;cloudVerifiedFiles='';el('cloudKey').value='';cloudControls();cloudStatus('配對成功 · 等待同步','wait');}catch(e){cloudStatus('配對失敗：'+e.message,'warn');}finally{cloudBusy=false;el('cloudPair').disabled=false;el('cloudSyncNow').disabled=!cloudConfig;el('cloudDisconnect').disabled=!cloudConfig;if(cloudConfig)cloudSchedule(50);const q=el('cloudQuickSync');if(q)q.disabled=!cloudConfig;}};
+  el('cloudSyncNow').onclick=()=>cloudSync('',true);el('cloudQuickSync').onclick=()=>cloudSync('',true);
+  el('cloudDisconnect').onclick=async()=>{if(cloudBusy||!confirm('解除這台裝置的配對？本機與雲端資料都保留。'))return;cloudBusy=true;try{await cloudBaseDelete(cloudConfig.dataset);localStorage.removeItem(CLOUD_CONFIG);localStorage.removeItem(CLOUD_BASE);cloudConfig=null;cloudBase=null;cloudBaseLoaded=false;cloudConflicts=[];cloudVerifiedFiles='';cloudQueued=false;cloudDeferred=false;clearTimeout(cloudTimer);cloudControls();cloudStatus('未配對 · 本機模式');}catch(e){cloudStatus('解除配對失敗：'+e.message,'warn');}finally{cloudBusy=false;el('cloudSyncNow').disabled=!cloudConfig;el('cloudDisconnect').disabled=!cloudConfig;el('cloudPair').disabled=false;}};
   el('cloudExportConflicts').onclick=()=>downloadFile(JSON.stringify(cloudConflicts,null,2),'VehicleHub_雲端衝突_'+todayISO()+'.json','application/json');
   for(const [id,choice,label] of [['cloudKeepLocal','local','本機'],['cloudKeepRemote','remote','雲端']])el(id).onclick=()=>{if(cloudConflicts.some(c=>c.blocking)){showToast('請先修正所屬車輛，並下載衝突報告');return;}if(confirm(`只針對已列出的衝突採用${label}版本？其他紀錄照常合併。請先下載衝突報告和完整備份。`))cloudSync(choice,true);};
-  window.addEventListener('online',()=>cloudSchedule(50));window.addEventListener('offline',()=>{if(cloudConfig&&!cloudBusy)cloudStatus('離線 · 資料保存在本機','wait');});window.addEventListener('focus',()=>cloudSchedule(50));document.addEventListener('visibilitychange',()=>{if(!document.hidden)cloudSchedule(50);});
+  window.addEventListener('online',()=>cloudSchedule(50));window.addEventListener('offline',()=>{if(cloudConfig&&!cloudBusy)cloudStatus('離線 · 資料保存在本機','wait');});window.addEventListener('focus',()=>cloudSchedule(50));document.addEventListener('visibilitychange',()=>{if(!document.hidden)cloudSchedule(50);});document.addEventListener('focusout',()=>{if(cloudDeferred)setTimeout(cloudResumeAfterEdit,50);});
   window.addEventListener('storage',e=>{if([STORAGE_KEY,CLOUD_CONFIG,CLOUD_BASE].includes(e.key)&&e.newValue!==e.oldValue){if(e.key===CLOUD_BASE){try{const a=JSON.parse(e.oldValue),b=JSON.parse(e.newValue);if(a&&b&&a.dataset===b.dataset&&a.revision===b.revision&&stable(a.data)===stable(b.data))return;}catch(_){} }cloudTabStale=true;cloudStatus('其他分頁已更新 · 請重新整理','warn');}});
   setInterval(()=>{if(!document.hidden)cloudSync();},60000);if(cloudConfig)cloudSchedule(50);
 }

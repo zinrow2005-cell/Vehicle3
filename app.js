@@ -1,5 +1,5 @@
 const STORAGE_KEY = 'vehiclehub_lite_v580';
-const APP_VERSION = 'V5.8.6';
+const APP_VERSION = 'V5.8.8';
 let state = null;
 const SNAPSHOT_KEY=STORAGE_KEY+'_previous';
 let lastMergeReport=null, editDetails=[], editAttachments=[], fileBusy=false, editorEpoch=0, detailsDirty=false;
@@ -31,7 +31,7 @@ async function loadInitialData() {
   }
   state=blankData(); persist(false);
 }
-function blankData(){return {version:'5.8.6',appName:'Vehicle Hub Lite',settings:{lastVehicleId:'local-default'},vehicles:[{id:'local-default',name:'我的車輛',fuelType:'',odometer:0}],fuel:[],maintenance:[],meta:{}};}
+function blankData(){return {version:'5.8.8',appName:'Vehicle Hub Lite',settings:{lastVehicleId:'local-default'},vehicles:[{id:'local-default',name:'我的車輛',fuelType:'',odometer:0}],fuel:[],maintenance:[],meta:{}};}
 
 function persist(snapshot=true) {
   state.meta=state.meta||{};state.meta.savedAt=new Date().toISOString();
@@ -64,7 +64,7 @@ function normalizeImportedData(data) {
   }
   // 保留紀錄欄位（包括維修明細及估算旗標），不保留已移除的模組。
   const selected=data.settings?.lastVehicleId||data.activeVehicleId;
-  const result={version:'5.8.6',appName:'Vehicle Hub Lite',settings:{lastVehicleId:ids.has(selected)?selected:out.vehicles[0].id},vehicles:out.vehicles,fuel:out.fuel,maintenance:out.maintenance,meta:out.meta||{},trash:Array.isArray(out.trash)?out.trash.filter(x=>x&&['fuel','maintenance'].includes(x.key)&&x.record&&ids.has(x.record.vehicleId)&&typeof x.record.id==='string'&&/^\d{4}-\d{2}-\d{2}$/.test(x.record.date||'')):[],tombstones:Array.isArray(out.tombstones)?out.tombstones.filter(x=>x&&['fuel','maintenance'].includes(x.key)&&typeof x.id==='string'):[]};
+  const result={version:'5.8.8',appName:'Vehicle Hub Lite',settings:{lastVehicleId:ids.has(selected)?selected:out.vehicles[0].id},vehicles:out.vehicles,fuel:out.fuel,maintenance:out.maintenance,meta:out.meta||{},trash:Array.isArray(out.trash)?out.trash.filter(x=>x&&['fuel','maintenance'].includes(x.key)&&x.record&&ids.has(x.record.vehicleId)&&typeof x.record.id==='string'&&/^\d{4}-\d{2}-\d{2}$/.test(x.record.date||'')):[],tombstones:Array.isArray(out.tombstones)?out.tombstones.filter(x=>x&&['fuel','maintenance'].includes(x.key)&&typeof x.id==='string'):[]};
   refreshVehicleOdometers(result);return result;
 }
 
@@ -150,10 +150,14 @@ function canSaveEditor(key,rows){
   }
   return true;
 }
+function vehicleSettingsDirty(){const v=getSelectedVehicle();return ['vehicleName','vehicleFuelType','vehiclePlate'].some((id,i)=>String(el(id).value||'')!==String(v?.[['name','fuelType','plate'][i]]||''));}
+function restoreVehicleSettings(){const v=getSelectedVehicle();el('vehicleName').value=v?.name||'';el('vehicleFuelType').value=v?.fuelType||'';el('vehiclePlate').value=v?.plate||'';}
+function resumeCloudAfterEditor(){if(typeof cloudResumeAfterEdit==='function')cloudResumeAfterEdit();}
 function canDiscardEditors(){
   const open=['fuel','maintenance'].filter(k=>editorVehicle[k]&&!el(k+'Editor').hidden);
-  if(!open.length)return true;
-  return confirm(`「${vehicleLabel(getSelectedVehicle())}」尚有開啟的${open.map(k=>k==='fuel'?'加油':'維修').join('、')}表單。切換或重開將關閉未儲存表單，確定繼續？`);
+  const dirtySettings=activeTab==='data'&&vehicleSettingsDirty();
+  if(!open.length&&!dirtySettings)return true;
+  return confirm(`「${vehicleLabel(getSelectedVehicle())}」尚有${[...open.map(k=>k==='fuel'?'加油表單':'維修表單'),...(dirtySettings?['未儲存車輛設定']:[])].join('、')}。切換或重開將放棄未儲存內容，確定繼續？`);
 }
 function resetVehicleFilters(){
   for(const k of ['fuel','maintenance']){el(k+'Search').value='';el(k+'Year').value='all';}
@@ -257,7 +261,16 @@ function renderFuelTable(){
  el('fuelTableWrap').innerHTML=rows.length?`<div class="record-list">${rows.map(r=>`<article class="record-card"><div class="record-head"><strong>${escapeHtml(r.date)} <span class="tag">${r.fullTank?'加滿':'未加滿'}</span>${quality(r)?' <span class="tag estimate">估算</span>':''}</strong><strong class="money">NT$ ${currency(r.amount)}</strong></div><div class="record-metrics"><span>里程 <b>${r.odometer?currency(r.odometer)+' km':'—'}</b></span><span>油量 <b>${r.liters?num(r.liters,2)+' L':'—'}</b></span><span>單價 <b>${r.liters&&r.amount!=null?num(r.amount/r.liters,2):'—'}</b></span></div>${fuelCycleHTML(r,segments.get(r.id))}<div class="record-foot"><div class="record-note">${escapeHtml([r.fuelType,r.station,r.notes].filter(Boolean).join('｜'))}</div><div class="row-actions"><button class="row-btn" data-edit-fuel="${escapeHtml(r.id)}">編輯</button><button class="row-btn delete" data-del-fuel="${escapeHtml(r.id)}">刪除</button></div></div></article>`).join('')}</div>`:'<p class="empty-holder">沒有符合的加油紀錄。</p>';
 }
 function quality(r){return !!(r.odometerEstimated||r.litersEstimated||r.fullTankEstimated);}
-function filteredRecords(rows,key){const year=el(key+'Year').value||'all',q=el(key+'Search').value.trim().toLowerCase();return rows.filter(r=>(year==='all'||r.date.startsWith(year))&&(!q||[r.date,r.odometer,r.amount,r.total,r.fuelType,r.station,r.notes,r.summary,r.vendor,r.type,r.workOrder].join(' ').toLowerCase().includes(q)));}
+// Search is presentation-only. Reject misplaced cloud connection credentials without modifying records.
+function invalidRecordSearch(value){const q=String(value||'').trim();return /^(?:https?:\/\/)?script\.google\.com\/macros\/s\//i.test(q)||/^[a-f0-9]{64}$/i.test(q);}
+function filteredRecords(rows,key){
+  const input=el(key+'Search');if(invalidRecordSearch(input.value))input.value='';
+  const year=el(key+'Year').value||'all',q=input.value.trim().toLowerCase();
+  const found=rows.filter(r=>{if(year!=='all'&&!r.date.startsWith(year))return false;if(!q)return true;const hay=[r.date,r.odometer,r.amount,r.total,r.fuelType,r.station,r.notes,r.summary,r.vendor,r.type,r.workOrder,...(r.details||[]).map(d=>d.name),...(r.localAttachments||[]).map(d=>d.name)].join(' ').toLowerCase();return hay.includes(q)||hay.replace(/(\d),(?=\d)/g,'$1').includes(q.replace(/(\d),(?=\d)/g,'$1'));});
+  el(key+'FilterCount').textContent=`顯示 ${found.length} / ${rows.length} 筆`;
+  el(key+'ClearFilter').disabled=!q&&year==='all';
+  return found;
+}
 function renderYearOptions(){for(const [id,rows] of [['fuelYear',vehicleFuelRecords()],['maintenanceYear',vehicleMaintenanceRecords()],['analysisYear',vehicleFuelRecords()]]){const node=el(id);const selected=node.value;const years=[...new Set((id==='analysisYear'?[...rows,...vehicleMaintenanceRecords()]:rows).map(r=>r.date.slice(0,4)))].sort().reverse();node.innerHTML='<option value="all">全部年份</option>'+years.map(y=>`<option value="${y}">${y} 年</option>`).join('');node.value=years.includes(selected)?selected:'all';}}
 
 function renderMaintenanceTable(){
@@ -362,6 +375,7 @@ function renderDataMeta() {
   const fuelCount = vehicleFuelRecords().length;
   const maintenanceCount = vehicleMaintenanceRecords().length;
   const savedAt = state.meta?.savedAt ? new Date(state.meta.savedAt).toLocaleString('zh-TW') : '尚未儲存';
+  el('restoreDeleted').disabled=!(state.trash||[]).some(x=>x.record.vehicleId===getSelectedVehicleId());
   el('snapshotInfo').textContent=localStorage.getItem(SNAPSHOT_KEY)?'已保留上一個資料版本（本機）':'尚無自動復原點';
   el('dataMeta').innerHTML = `
     <div class="meta-item"><strong>版本</strong>${APP_VERSION}</div>
@@ -384,16 +398,23 @@ function renderAll() {
   renderMaintenanceTable();
   renderAnalysis();
   renderDataMeta();
-  el('vehicleName').value=getSelectedVehicle()?.name||'';el('vehicleFuelType').value=getSelectedVehicle()?.fuelType||'';el('vehiclePlate').value=getSelectedVehicle()?.plate||'';
+  restoreVehicleSettings();
+  if(typeof cloudRenderCounts==='function')cloudRenderCounts();
 }
 
 function bindTabs() {
   el('tabs').addEventListener('click', (event) => {
     const btn = event.target.closest('.tab');
     if (!btn) return;
-    activeTab = btn.dataset.tab;
+    const next=btn.dataset.tab;
+    if(next!==activeTab&&(['fuel','maintenance'].some(k=>editorVehicle[k]&&!el(k+'Editor').hidden)|| (activeTab==='data'&&vehicleSettingsDirty()))){
+      if(!canDiscardEditors())return;
+      resetFuelForm();resetMaintenanceForm();restoreVehicleSettings();
+    }
+    activeTab = next;
     document.querySelectorAll('.tab').forEach(tab => tab.classList.toggle('active', tab === btn));
     document.querySelectorAll('.tab-panel').forEach(panel => panel.classList.toggle('active', panel.id === `panel-${activeTab}`));
+    if(activeTab==='fuel')renderFuelTable();if(activeTab==='maintenance')renderMaintenanceTable();resumeCloudAfterEditor();
   });
 }
 
@@ -494,8 +515,8 @@ function bindForms() {
     showToast(idx >= 0 ? '已更新維修紀錄' : '已新增維修紀錄');
   });
 
-  el('fuelCancelBtn').addEventListener('click', resetFuelForm);
-  el('maintenanceCancelBtn').addEventListener('click', resetMaintenanceForm);
+  el('fuelCancelBtn').addEventListener('click', ()=>{resetFuelForm();resumeCloudAfterEditor();});
+  el('maintenanceCancelBtn').addEventListener('click', ()=>{resetMaintenanceForm();resumeCloudAfterEditor();});
 
   [el('maintenanceParts'), el('maintenanceLabor'), el('maintenanceDiscount')].forEach(node => {
     node.addEventListener('input', () => {
@@ -601,7 +622,7 @@ function bindDataActions(){
   el('exportConflicts').onclick=()=>{if(lastMergeReport?.length)downloadFile(JSON.stringify(lastMergeReport,null,2),'VehicleHub_合併衝突_'+todayISO()+'.json','application/json');};
   el('exportFuelCsv').onclick=()=>exportCSV('fuel');el('exportMaintCsv').onclick=()=>exportCSV('maintenance');
   el('restoreSnapshot').onclick=()=>{if(typeof cloudConfig!=='undefined'&&cloudConfig)return showToast('配對期間暫停整份復原');const saved=localStorage.getItem(SNAPSHOT_KEY);if(!saved){showToast('尚無復原點');return;}if(!canDiscardEditors()||!confirm('復原上一個本機資料版本？目前版本將成為新的復原點。'))return;try{state=normalizeImportedData(JSON.parse(saved));persist();resetFuelForm();resetMaintenanceForm();resetVehicleFilters();renderAll();showToast('已復原上一版本');}catch(err){showToast('復原失敗：'+err.message);}};
-  el('restoreDeleted').onclick=()=>{const entry=(state.trash||[])[(state.trash||[]).length-1];if(!entry){showToast('無可復原的刪除紀錄');return;}if(!canDiscardEditors()||!confirm('復原最近刪除的紀錄？'))return;if(!state.vehicles.some(v=>v.id===entry.record.vehicleId)||state[entry.key].some(r=>r.id===entry.record.id)){showToast('原車輛不存在或紀錄已存在');return;}state[entry.key].push(entry.record);state.trash.pop();state.tombstones=(state.tombstones||[]).filter(t=>!(t.key===entry.key&&t.id===entry.record.id));refreshVehicleOdometers();persist();resetFuelForm();resetMaintenanceForm();renderAll();showToast('已復原紀錄');};
+  el('restoreDeleted').onclick=()=>{const trash=state.trash||[],id=getSelectedVehicleId();let idx=trash.length-1;while(idx>=0&&trash[idx].record.vehicleId!==id)idx--;const entry=trash[idx];if(!entry){showToast('此車無可復原的刪除紀錄');return;}if(!canDiscardEditors()||!confirm(`復原「${vehicleLabel(getSelectedVehicle())}」${entry.record.date} 最近刪除的${entry.key==='fuel'?'加油':'維修'}紀錄？`))return;if(!state.vehicles.some(v=>v.id===entry.record.vehicleId)||state[entry.key].some(r=>r.id===entry.record.id)){showToast('原車輛不存在或紀錄已存在');return;}state[entry.key].push(entry.record);state.trash.splice(idx,1);state.tombstones=(state.tombstones||[]).filter(t=>!(t.key===entry.key&&t.id===entry.record.id));refreshVehicleOdometers();persist();resetFuelForm();resetMaintenanceForm();renderAll();showToast('已復原紀錄');};
   el('resetLocalBtn').addEventListener('click',()=>{if(typeof cloudConfig!=='undefined'&&cloudConfig)return showToast('請先解除配對並備份');if(!canDiscardEditors()||!confirm('確定清除本機所有車輛及全部紀錄？請先匯出備份。'))return;state=blankData();persist();resetFuelForm();resetMaintenanceForm();resetVehicleFilters();renderAll();showToast('已清除本機資料');});
 }
 
@@ -633,11 +654,18 @@ async function main() {
 function confirmMileage(record){if(!(record.odometer>0))return true;const other=[...state.fuel,...state.maintenance].filter(r=>r.vehicleId===record.vehicleId&&r.id!==record.id&&r.odometer>0);const conflict=other.find(r=>(r.date<record.date&&r.odometer>record.odometer)||(r.date>record.date&&r.odometer<record.odometer));return !conflict||confirm(`里程日期可能衝突：${conflict.date} 為 ${currency(conflict.odometer)} km。仍要儲存本筆？`);}
 function updatePrice(){const l=Number(el('fuelLiters').value),a=el('fuelAmount').value;el('fuelPricePreview').textContent=l>0&&a!==''?`每公升 NT$ ${num(Number(a)/l,2)}`:'每公升價格 —';}
 function bindLiteUI(){
-  const open=(key)=>{if(!canDiscardEditors())return;resetFuelForm();resetMaintenanceForm();document.querySelector(`[data-tab="${key}"]`).click();setEditorVehicle(key);el(key+'Editor').hidden=false;el(key+'Editor').scrollIntoView({block:'start',behavior:'smooth'});};
+  const open=(key)=>{if(!canDiscardEditors())return;resetFuelForm();resetMaintenanceForm();restoreVehicleSettings();document.querySelector(`[data-tab="${key}"]`).click();setEditorVehicle(key);el(key+'Editor').hidden=false;el(key+'Editor').scrollIntoView({block:'start',behavior:'smooth'});};
   el('quickFuel').onclick=()=>open('fuel');el('quickMaint').onclick=()=>open('maintenance');el('fuelNewBtn').onclick=()=>open('fuel');el('maintenanceNewBtn').onclick=()=>open('maintenance');
-  for(const key of ['fuel','maintenance']){el(key+'Search').addEventListener('input',key==='fuel'?renderFuelTable:renderMaintenanceTable);el(key+'Year').addEventListener('change',key==='fuel'?renderFuelTable:renderMaintenanceTable);}
+  for(const key of ['fuel','maintenance']){
+    const refresh=key==='fuel'?renderFuelTable:renderMaintenanceTable,input=el(key+'Search');
+    for(const event of ['input','change','focus'])input.addEventListener(event,refresh);
+    input.addEventListener('animationstart',e=>{if(e.animationName==='vh-search-autofill')refresh();});
+    el(key+'Year').addEventListener('change',refresh);
+    el(key+'ClearFilter').onclick=()=>{input.value='';el(key+'Year').value='all';refresh();};
+  }
   el('analysisYear').onchange=renderAnalysis;el('includeEstimated').onchange=renderAnalysis;for(const id of ['fuelAmount','fuelLiters'])el(id).addEventListener('input',updatePrice);
   el('vehicleForm').onsubmit=e=>{e.preventDefault();const v=getSelectedVehicle();v.name=el('vehicleName').value.trim()||v.name;v.fuelType=el('vehicleFuelType').value.trim();v.plate=el('vehiclePlate').value.trim();persist();renderAll();showToast('車輛已更新');};
+  el('cancelVehicleSettings').onclick=()=>{restoreVehicleSettings();resumeCloudAfterEditor();showToast('已取消未儲存設定');};
   el('addVehicle').onclick=()=>{if(!canDiscardEditors())return;const name=prompt('新車輛名稱');if(!name||!name.trim())return;const v={id:uid('car'),name:name.trim(),fuelType:'',odometer:0};state.vehicles.push(v);state.settings.lastVehicleId=v.id;resetFuelForm();resetMaintenanceForm();resetVehicleFilters();persist();renderAll();showToast('已新增車輛');};
 }
 function fuelCycleHTML(r,s){if(!s)return `<div class="cycle-note">${r.fullTank?(r.odometer?'尚無可結算的完整區間':'缺少里程，油量併入下一個有效區間'):'部分加油，油量併入下一個有效區間'}</div>`;return `<div class="cycle-box"><div class="cycle-note">${escapeHtml(s.fromDate)} ～ ${escapeHtml(s.toDate)}${s.estimated?' · 含估算':''}</div><div class="record-metrics"><span>區間距離<b>${currency(s.distance)} km</b></span><span>區間油耗<b>${num(s.kmPerLiter,2)} km/L</b></span><span>每公里油費<b>${s.amount==null?'—':'$'+num(s.amount/s.distance,2)}</b></span></div><div class="cycle-note">累計 ${num(s.liters,2)} L · ${s.count} 筆加油</div></div>`;}
